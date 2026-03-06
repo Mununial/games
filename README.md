@@ -80,3 +80,5 @@ QRIO features a robust **Rewards Hub**:
 
 ---
 *Education is no longer just a book; it's an adventure. Welcome to QRIO.*
+
+# Qrio

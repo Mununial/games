@@ -1264,7 +1264,7 @@
                 if (window.localStorage) {
                     let activeId = localStorage.getItem('qrio_active_id');
                     if (activeId) {
-                        fetch('http://localhost:5000/api/points', {
+                        fetch('/api/points', {
                             method: 'POST',
                             headers: { 'Content-Type': 'application/json' },
                             body: JSON.stringify({ userId: activeId, pointsToAdd: milesGained })

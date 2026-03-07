@@ -480,7 +480,7 @@
         function refreshPoints() {
             let activeId = localStorage.getItem('qrio_active_id');
             if (activeId) {
-                fetch('http://localhost:5000/api/points/' + activeId)
+                fetch('/api/points/' + activeId)
                     .then(r => r.json())
                     .then(data => {
                         document.getElementById('coinDisplay').innerText = data.points || 0;
@@ -559,7 +559,7 @@
                 // Award massive points to DB
                 let activeId = localStorage.getItem('qrio_active_id');
                 if (activeId) {
-                    fetch('http://localhost:5000/api/points', {
+                    fetch('/api/points', {
                         method: 'POST',
                         headers: { 'Content-Type': 'application/json' },
                         body: JSON.stringify({ userId: activeId, pointsToAdd: 100 })

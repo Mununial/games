@@ -2505,7 +2505,7 @@
             const activeId = localStorage.getItem('qrio_active_id');
             if (activeId) {
                 try {
-                    const response = await fetch(`http://localhost:5000/api/points/${activeId}`);
+                    const response = await fetch(`/api/points/${activeId}`);
                     if (response.ok) {
                         const data = await response.json();
                         const userName = data.name || "Agent";
@@ -2643,14 +2643,14 @@
 
             try {
                 // Try to signup (if exists, it will return 409, which we catch or handle)
-                const signupRes = await fetch('http://localhost:5000/api/signup', {
+                const signupRes = await fetch('/api/signup', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify(googleUser)
                 });
                 
                 // Even if it fails (already exists), we just proceed to login state
-                const response = await fetch('http://localhost:5000/api/signin', {
+                const response = await fetch('/api/signin', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({ userId: googleUser.userId, password: googleUser.password })
@@ -2727,7 +2727,7 @@
                 submitBtn.style.pointerEvents = 'none';
 
                 try {
-                    const response = await fetch('http://localhost:5000/api/signup', {
+                    const response = await fetch('/api/signup', {
                         method: 'POST',
                         headers: { 'Content-Type': 'application/json' },
                         body: JSON.stringify({ name, userId, password })
@@ -2780,7 +2780,7 @@
                 submitBtn.style.pointerEvents = 'none';
 
                 try {
-                    const response = await fetch('http://localhost:5000/api/signin', {
+                    const response = await fetch('/api/signin', {
                         method: 'POST',
                         headers: { 'Content-Type': 'application/json' },
                         body: JSON.stringify({ userId: providedId, password })
@@ -2870,7 +2870,7 @@
             }
 
             try {
-                const response = await fetch('http://localhost:5000/api/points/redeem', {
+                const response = await fetch('/api/points/redeem', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({ userId, points })
@@ -2944,7 +2944,7 @@
 
             let activeId = localStorage.getItem('qrio_active_id');
             if (activeId && checkbox.checked) {
-                fetch('http://localhost:5000/api/points', {
+                fetch('/api/points', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({ userId: activeId, pointsToAdd: pts })
@@ -2957,7 +2957,7 @@
             let activeId = localStorage.getItem('qrio_active_id');
             if (activeId) {
                 try {
-                    const response = await fetch(`http://localhost:5000/api/points/${activeId}`);
+                    const response = await fetch(`/api/points/${activeId}`);
                     if (response.ok) {
                         const data = await response.json();
                         let walletDisplay = document.getElementById('sideWalletPoints');

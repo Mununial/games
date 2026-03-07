@@ -3,6 +3,7 @@ const cors = require('cors');
 const fs = require('fs');
 const path = require('path');
 const http = require('http');
+const crypto = require('crypto');
 const { Server } = require('socket.io');
 
 const app = express();
@@ -20,19 +21,33 @@ app.use(express.json());
 app.use(express.static(path.join(__dirname)));
 
 const DATA_FILE = path.join(__dirname, 'users.json');
+const SESSIONS_FILE = path.join(__dirname, 'sessions.json');
 
-// Helper to read data
+// Helper to read/write users
 function readData() {
     if (!fs.existsSync(DATA_FILE)) return {};
     return JSON.parse(fs.readFileSync(DATA_FILE));
 }
-
-// Helper to write data
 function writeData(data) {
     fs.writeFileSync(DATA_FILE, JSON.stringify(data, null, 2));
 }
 
-// REST endpoints... (Signup, Signin, Points stay same)
+// Helper to read/write sessions
+function readSessions() {
+    if (!fs.existsSync(SESSIONS_FILE)) return {};
+    return JSON.parse(fs.readFileSync(SESSIONS_FILE));
+}
+function writeSessions(data) {
+    fs.writeFileSync(SESSIONS_FILE, JSON.stringify(data, null, 2));
+}
+
+// Generate a secure token
+function generateToken() {
+    return crypto.randomBytes(32).toString('hex');
+}
+
+// --- REST Endpoints ---
+
 app.post('/api/signup', (req, res) => {
     const { userId, name, password } = req.body;
     const users = readData();
@@ -40,17 +55,44 @@ app.post('/api/signup', (req, res) => {
     if (users[userId]) return res.status(409).json({ success: false, message: 'Exists already.' });
     users[userId] = { name: name || 'Explorer', password, points: 0, createdAt: new Date().toISOString() };
     writeData(users);
-    res.json({ success: true, uniqueId: userId, points: 0, name: users[userId].name });
+
+    // Auto-create session token on signup
+    const token = generateToken();
+    const sessions = readSessions();
+    sessions[token] = { userId, createdAt: new Date().toISOString() };
+    writeSessions(sessions);
+
+    res.json({ success: true, uniqueId: userId, points: 0, name: users[userId].name, token });
 });
 
 app.post('/api/signin', (req, res) => {
     const { userId, password } = req.body;
     const users = readData();
     if (users[userId] && users[userId].password === password) {
-        res.json({ success: true, uniqueId: userId, points: users[userId].points, name: users[userId].name });
+        // Create session token
+        const token = generateToken();
+        const sessions = readSessions();
+        sessions[token] = { userId, createdAt: new Date().toISOString() };
+        writeSessions(sessions);
+
+        res.json({ success: true, uniqueId: userId, points: users[userId].points, name: users[userId].name, token });
     } else {
         res.status(401).json({ success: false, message: 'Invalid credentials.' });
     }
+});
+
+// NEW: Verify session token (for cross-device login)
+app.get('/api/session/:token', (req, res) => {
+    const { token } = req.params;
+    const sessions = readSessions();
+    const session = sessions[token];
+    if (!session) return res.status(404).json({ success: false, message: 'Session expired or invalid.' });
+
+    const users = readData();
+    const user = users[session.userId];
+    if (!user) return res.status(404).json({ success: false, message: 'User not found.' });
+
+    res.json({ success: true, uniqueId: session.userId, points: user.points, name: user.name });
 });
 
 app.get('/api/points/:userId', (req, res) => {
@@ -130,7 +172,6 @@ io.on('connection', (socket) => {
     });
 
     socket.on('disconnect', () => {
-        // Cleanup logic could be added here
         console.log('User disconnected');
     });
 });

@@ -2384,6 +2384,11 @@
             }, 3000);
         }
 
+        // Add slideInToast animation
+        const toastStyle = document.createElement('style');
+        toastStyle.textContent = `@keyframes slideInToast { from { opacity:0; transform:translateY(30px) scale(0.9); } to { opacity:1; transform:translateY(0) scale(1); } }`;
+        document.head.appendChild(toastStyle);
+
         // --- Init AOS ---
         AOS.init({
             duration: 1000,
@@ -2501,30 +2506,51 @@
                 if(dashToggle) dashToggle.innerHTML = '<i class="fa-solid fa-moon"></i> Dark Interface';
             }
 
-            // --- SESSION RECOVERY (Auto-Login on Refresh) ---
+            // --- SESSION RECOVERY (Auto-Login on Refresh OR via URL Token) ---
+            async function restoreSession(userId, data) {
+                const userName = data.name || "Agent";
+                if(document.getElementById('welcomeNameDisplay')) document.getElementById('welcomeNameDisplay').innerText = userName;
+                if(document.getElementById('sideNavName')) document.getElementById('sideNavName').innerText = userName;
+                if(document.getElementById('cardHolderName')) document.getElementById('cardHolderName').innerText = userName;
+                if(document.getElementById('cardIdDisplay')) document.getElementById('cardIdDisplay').innerText = formatIdForCard(userId);
+                if(document.getElementById('sideNavAvatar')) document.getElementById('sideNavAvatar').src = `https://api.dicebear.com/7.x/pixel-art/svg?seed=${userName}`;
+                if(document.getElementById('sideWalletPoints')) document.getElementById('sideWalletPoints').innerText = data.points + " pts";
+                if(document.getElementById('totalPointsBoard')) document.getElementById('totalPointsBoard').innerText = "Total: " + data.points + " pts";
+                if(document.getElementById('userScoreDisplay')) document.getElementById('userScoreDisplay').innerText = "Points: " + data.points;
+                navigateTo('dashboardView');
+                showGameNotify(`Welcome back, ${userName}! 🚀`, 'success');
+            }
+
+            // Check URL for session token (cross-device login)
+            const urlParams = new URLSearchParams(window.location.search);
+            const urlToken = urlParams.get('token');
+
+            if (urlToken) {
+                try {
+                    const response = await fetch(`/api/session/${urlToken}`);
+                    if (response.ok) {
+                        const data = await response.json();
+                        // Save locally for future refreshes
+                        localStorage.setItem('qrio_active_id', data.uniqueId);
+                        localStorage.setItem('qrio_session_token', urlToken);
+                        await restoreSession(data.uniqueId, data);
+                        // Clean URL without reload
+                        window.history.replaceState({}, document.title, window.location.pathname);
+                        return;
+                    }
+                } catch (e) {
+                    console.warn("Token session failed.");
+                }
+            }
+
+            // Fallback: localStorage session
             const activeId = localStorage.getItem('qrio_active_id');
             if (activeId) {
                 try {
                     const response = await fetch(`/api/points/${activeId}`);
                     if (response.ok) {
                         const data = await response.json();
-                        const userName = data.name || "Agent";
-                        
-                        // Populate New Mission Control Elements
-                        if(document.getElementById('welcomeNameDisplay')) document.getElementById('welcomeNameDisplay').innerText = userName;
-                        if(document.getElementById('sideNavName')) document.getElementById('sideNavName').innerText = userName;
-                        if(document.getElementById('cardHolderName')) document.getElementById('cardHolderName').innerText = userName;
-                        if(document.getElementById('cardIdDisplay')) document.getElementById('cardIdDisplay').innerText = formatIdForCard(activeId);
-                        if(document.getElementById('sideNavAvatar')) document.getElementById('sideNavAvatar').src = `https://api.dicebear.com/7.x/pixel-art/svg?seed=${userName}`;
-                        if(document.getElementById('sideWalletPoints')) document.getElementById('sideWalletPoints').innerText = data.points + " pts";
-                        if(document.getElementById('totalPointsBoard')) document.getElementById('totalPointsBoard').innerText = "Total: " + data.points + " pts";
-                        
-                        // Populate legacy score if exists
-                        if(document.getElementById('userScoreDisplay')) document.getElementById('userScoreDisplay').innerText = "Points: " + data.points;
-
-                        // Navigate silently or with notification
-                        navigateTo('dashboardView');
-                        showGameNotify(`Welcome back, Agent ${userName}.`, 'success');
+                        await restoreSession(activeId, data);
                     }
                 } catch (e) {
                     console.warn("Session pulse failed. Proceeding to surface.");
@@ -2744,6 +2770,7 @@
                     uniqueId = data.uniqueId;
                     currentPoints = data.points;
                     let uName = data.name || name || uniqueId;
+                    if (data.token) window._loginToken = data.token;
                     
                     // Populate New Mission Control Elements
                     if(document.getElementById('welcomeNameDisplay')) document.getElementById('welcomeNameDisplay').innerText = uName;
@@ -2752,7 +2779,7 @@
                     if(document.getElementById('cardIdDisplay')) document.getElementById('cardIdDisplay').innerText = formatIdForCard(uniqueId);
                     if(document.getElementById('sideNavAvatar')) document.getElementById('sideNavAvatar').src = `https://api.dicebear.com/7.x/pixel-art/svg?seed=${uName}`;
 
-                    showGameNotify(`Signed up successfully! Welcome Agent!`, 'success');
+                    showGameNotify(`Account created! Welcome, ${uName}! 🎮`, 'success');
                 } catch (error) {
                     showGameNotify('Error connecting to Server.', 'error');
                     resetBtnState();
@@ -2792,6 +2819,7 @@
                         uniqueId = data.uniqueId;
                         currentPoints = data.points;
                         let uName = data.name || uniqueId;
+                        if (data.token) window._loginToken = data.token;
                         
                         // Populate New Mission Control Elements
                         if(document.getElementById('welcomeNameDisplay')) document.getElementById('welcomeNameDisplay').innerText = uName;
@@ -2800,7 +2828,7 @@
                         if(document.getElementById('cardIdDisplay')) document.getElementById('cardIdDisplay').innerText = formatIdForCard(uniqueId);
                         if(document.getElementById('sideNavAvatar')) document.getElementById('sideNavAvatar').src = `https://api.dicebear.com/7.x/pixel-art/svg?seed=${uName}`;
 
-                        showGameNotify(`Access Granted. Welcome back Agent.`, 'success');
+                        showGameNotify(`Welcome back, ${uName}! 🎮`, 'success');
                         // Minor delay for loading visual effect
                         await new Promise(r => setTimeout(r, 800));
                     } else {
@@ -2826,8 +2854,18 @@
             // Sync State
             resetBtnState();
 
-            // Centralized Store ID and sync points locally
+            // Store local session
             localStorage.setItem('qrio_active_id', uniqueId);
+
+            // If server returned a token, save it and show shareable link
+            if (window._loginToken) {
+                localStorage.setItem('qrio_session_token', window._loginToken);
+                // Show shareable link notification
+                const shareUrl = `${window.location.origin}${window.location.pathname}?token=${window._loginToken}`;
+                window._shareUrl = shareUrl;
+                setTimeout(() => showShareLinkToast(shareUrl), 1500);
+                window._loginToken = null;
+            }
 
             if(document.getElementById('sideWalletPoints')) document.getElementById('sideWalletPoints').innerText = currentPoints + " pts";
             if(document.getElementById('totalPointsBoard')) document.getElementById('totalPointsBoard').innerText = "Total: " + currentPoints + " pts";
@@ -2931,7 +2969,49 @@
 
         function logout() {
             localStorage.removeItem('qrio_active_id');
+            localStorage.removeItem('qrio_session_token');
             navigateTo('authView');
+        }
+
+        function showShareLinkToast(shareUrl) {
+            // Remove existing toast if any
+            const existing = document.getElementById('shareLinkToast');
+            if (existing) existing.remove();
+
+            const toast = document.createElement('div');
+            toast.id = 'shareLinkToast';
+            toast.innerHTML = `
+                <div style="display:flex;align-items:center;gap:10px;margin-bottom:10px;">
+                    <i class="fa-solid fa-mobile-screen" style="font-size:1.4rem;color:#6366f1;"></i>
+                    <span style="font-weight:700;font-size:0.95rem;color:#f1f5f9;">📱 Phone Pe Bhi Kholein!</span>
+                    <button onclick="document.getElementById('shareLinkToast').remove()" style="margin-left:auto;background:none;border:none;color:#94a3b8;cursor:pointer;font-size:1.1rem;">✕</button>
+                </div>
+                <p style="font-size:0.78rem;color:#94a3b8;margin:0 0 10px 0;">Yeh link phone pe open karo — seedha dashboard pe jaoge!</p>
+                <div style="background:rgba(99,102,241,0.1);border:1px solid rgba(99,102,241,0.3);border-radius:8px;padding:8px 12px;display:flex;align-items:center;gap:8px;">
+                    <span id="shareUrlText" style="font-size:0.7rem;color:#a5b4fc;flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${shareUrl}</span>
+                    <button id="copyShareBtn" onclick="navigator.clipboard.writeText('${shareUrl}').then(()=>{document.getElementById('copyShareBtn').innerHTML='<i class=\\'fa-solid fa-check\\'></i>';setTimeout(()=>{document.getElementById('copyShareBtn').innerHTML='<i class=\\'fa-solid fa-copy\\'></i>';},2000)})" style="background:var(--primary,#6366f1);border:none;color:white;padding:5px 10px;border-radius:6px;cursor:pointer;font-size:0.8rem;white-space:nowrap;">
+                        <i class="fa-solid fa-copy"></i>
+                    </button>
+                </div>
+            `;
+            toast.style.cssText = `
+                position:fixed;bottom:30px;right:20px;z-index:99999;
+                background:linear-gradient(135deg,rgba(15,23,42,0.97),rgba(30,41,59,0.97));
+                border:1px solid rgba(99,102,241,0.4);
+                border-radius:16px;padding:16px 18px;
+                max-width:340px;width:90%;
+                box-shadow:0 20px 60px rgba(0,0,0,0.5),0 0 30px rgba(99,102,241,0.2);
+                backdrop-filter:blur(20px);
+                animation: slideInToast 0.4s cubic-bezier(0.34,1.56,0.64,1) forwards;
+            `;
+            document.body.appendChild(toast);
+
+            // Auto hide after 20 seconds
+            setTimeout(() => {
+                if (document.getElementById('shareLinkToast')) {
+                    gsap.to(toast, { opacity: 0, y: 20, duration: 0.3, onComplete: () => toast.remove() });
+                }
+            }, 20000);
         }
 
 

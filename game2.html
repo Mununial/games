@@ -249,6 +249,9 @@
         const canvasOut = document.getElementById('output_canvas');
         const ctx = canvasOut.getContext('2d');
 
+        // Global variables (Declared before first use in resize)
+        let renderer, scene, camera, meshGroup;
+
         function resize() {
             canvasOut.width = window.innerWidth;
             canvasOut.height = window.innerHeight;
@@ -258,7 +261,6 @@
         resize();
 
         // --- 3D Background (Three.js) ---
-        let renderer, scene, camera, meshGroup;
         function init3DBG() {
             scene = new THREE.Scene();
             camera = new THREE.PerspectiveCamera(75, window.innerWidth/window.innerHeight, 1, 1000);

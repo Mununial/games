@@ -43,14 +43,12 @@
             position: absolute; top: 0; left: 0; z-index: 1;
         }
 
-        /* Gradient Overlay for Background */
         .vignette {
             position: fixed; inset: 0;
             background: radial-gradient(circle at center, transparent 30%, rgba(2, 6, 23, 0.7) 100%);
             z-index: 2; pointer-events: none;
         }
 
-        /* UI Overlays */
         .overlay {
             position: fixed; inset: 0;
             display: flex; flex-direction: column;
@@ -70,7 +68,7 @@
             padding: 50px;
             text-align: center;
             box-shadow: 0 0 50px rgba(139, 92, 246, 0.2);
-            max-width: 550px;
+            max-width: 600px;
             width: 90%;
         }
 
@@ -84,19 +82,19 @@
         }
 
         .hand-selector {
-            display: flex; gap: 20px; justify-content: center; margin: 35px 0;
+            display: flex; gap: 15px; justify-content: center; margin: 35px 0;
         }
 
         .hand-btn {
-            flex: 1; padding: 20px; border-radius: 25px;
+            flex: 1; padding: 20px 10px; border-radius: 25px;
             border: 2px solid var(--glass-border);
             background: rgba(255,255,255,0.03);
             color: white; cursor: pointer;
             transition: 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
-            font-weight: 700;
+            font-weight: 700; font-size: 0.8rem;
         }
 
-        .hand-btn i { font-size: 2.2rem; display: block; margin-bottom: 10px; opacity: 0.6; }
+        .hand-btn i { font-size: 1.8rem; display: block; margin-bottom: 8px; opacity: 0.6; }
         .hand-btn.active {
             border-color: var(--cyber);
             background: rgba(0, 242, 255, 0.1);
@@ -116,7 +114,6 @@
         }
         .btn-start:hover { transform: translateY(-5px); box-shadow: 0 20px 45px rgba(236, 72, 153, 0.5); }
 
-        /* HUD */
         .hud {
             position: fixed; top: 0; left: 0; width: 100%;
             padding: 30px; display: flex; justify-content: space-between; align-items: flex-start;
@@ -167,17 +164,14 @@
         }
 
         @keyframes spin { to { transform: rotate(360deg); } }
-        @keyframes sway {
-            0% { transform: translateX(0px); }
-            50% { transform: translateX(20px); }
-            100% { transform: translateX(0px); }
-        }
 
         @media (max-width: 768px) {
             .target-box { width: 85%; padding: 15px; }
             #targetEq { font-size: 2.5rem; }
             .hud-card { gap: 20px; padding: 10px 20px; }
             .stat-val { font-size: 1.4rem; }
+            .hand-selector { flex-wrap: wrap; }
+            .hand-btn { flex: unset; width: 45%; }
         }
     </style>
 </head>
@@ -195,15 +189,19 @@
     <div id="menuOverlay" class="overlay hidden">
         <div class="game-card">
             <h1 class="title">MATH BURST</h1>
-            <p style="opacity:0.6; font-size: 1.1rem;">Select your dominant hand to begin.</p>
+            <p style="opacity:0.6; font-size: 1.1rem;">Choose your tracking mode.</p>
             
             <div class="hand-selector">
-                <button class="hand-btn active" id="btnLeft" onclick="selectHand('Left')">
-                    <i class="fa-solid fa-hand-fist"></i>
+                <button class="hand-btn" id="btnLeft" onclick="selectHand('Left')">
+                    <i class="fa-solid fa-hand"></i>
                     <span>LEFT HAND</span>
                 </button>
+                <button class="hand-btn active" id="btnBoth" onclick="selectHand('Both')">
+                    <i class="fa-solid fa-hands"></i>
+                    <span>BOTH HANDS</span>
+                </button>
                 <button class="hand-btn" id="btnRight" onclick="selectHand('Right')">
-                    <i class="fa-solid fa-hand-fist" style="transform: skewX(180deg);"></i>
+                    <i class="fa-solid fa-hand" style="transform: scaleX(-1);"></i>
                     <span>RIGHT HAND</span>
                 </button>
             </div>
@@ -235,24 +233,25 @@
     <div id="feedback">BOOM!</div>
 
     <script>
-        // --- Global Variables (Declared first to avoid TDZ errors) ---
+        // --- Globals ---
         let renderer, scene, camera, meshGroup;
         
         // --- Variables ---
-        let selectedHandSide = 'Left';
+        let selectedHandSide = 'Both'; 
         let score = 0;
         let timeLeft = 60;
         let gameActive = false;
         let curProblem = { eq: "", ans: 0 };
         let particles = [];
         let bubbles = [];
-        let handPos = { x: -500, y: -500 };
+        let handPosL = { x: -500, y: -500, active: false };
+        let handPosR = { x: -500, y: -500, active: false };
         let frameCount = 0;
 
         // --- Physics ---
         const Engine = Matter.Engine, World = Matter.World, Bodies = Matter.Bodies;
         const engine = Engine.create();
-        engine.world.gravity.y = 0; // Manual float logic for better control
+        engine.world.gravity.y = 0; 
         
         const canvasOut = document.getElementById('output_canvas');
         const ctx = canvasOut.getContext('2d');
@@ -276,7 +275,7 @@
             meshGroup = new THREE.Group();
             const geometry = new THREE.IcosahedronGeometry(10, 0);
             for(let i=0; i<150; i++) {
-                const material = new THREE.MeshBasicMaterial({ color: i % 3 === 0 ? 0x00f2ff : 0xec4899, wireframe: true, transparent: true, opacity: 0.2 });
+                const material = new THREE.MeshBasicMaterial({ color: i % 3 === 0 ? 0x00f2ff : 0xec4899, wireframe: true, transparent: true, opacity: 0.15 });
                 const mesh = new THREE.Mesh(geometry, material);
                 mesh.position.set((Math.random()-0.5)*2000, (Math.random()-0.5)*2000, (Math.random()-0.5)*2000);
                 mesh.rotation.set(Math.random()*Math.PI, Math.random()*Math.PI, 0);
@@ -287,19 +286,19 @@
 
             function animate3D() {
                 requestAnimationFrame(animate3D);
-                meshGroup.rotation.y += 0.0005;
-                meshGroup.rotation.x += 0.0002;
+                meshGroup.rotation.y += 0.0004;
                 renderer.render(scene, camera);
             }
             animate3D();
         }
         init3DBG();
 
-        // --- Game Logic ---
+        // --- Selection ---
         function selectHand(side) {
             selectedHandSide = side;
             document.getElementById('btnLeft').classList.toggle('active', side === 'Left');
             document.getElementById('btnRight').classList.toggle('active', side === 'Right');
+            document.getElementById('btnBoth').classList.toggle('active', side === 'Both');
         }
 
         function startGame() {
@@ -316,9 +315,7 @@
             const b = Math.floor(Math.random()*12) + 1;
             curProblem = { eq: `${a} + ${b}`, ans: a + b };
             document.getElementById('targetEq').innerText = curProblem.eq;
-            gsap.from('#targetEq', { y: 20, opacity: 0, duration: 0.5, ease: "power4.out" });
-            
-            // Randomly timed spawns
+            gsap.from('#targetEq', { y: 20, opacity: 0, duration: 0.5 });
             spawnBubbles(curProblem.ans);
         }
 
@@ -335,15 +332,15 @@
 
             choices.forEach((val, i) => {
                 const r = 70 + Math.random() * 20;
-                const x = (window.innerWidth / 5) * (i + 1) + (Math.random()-0.5)*100; // Scattered
-                const y = window.innerHeight + 150 + (i * 100); // Varied start heights
+                const x = (window.innerWidth / 5) * (i + 1) + (Math.random()-0.5)*150;
+                const y = window.innerHeight + 200 + (i * 120);
                 
                 const body = Bodies.circle(x, y, r, { frictionAir: 0.01, restitution: 0.95 });
                 bubbles.push({
                     body, val, radius: r,
                     color: val === correct ? '#00f2ff' : '#ec4899',
                     swayOffset: Math.random() * Math.PI * 2,
-                    speed: 4 + Math.random() * 3,
+                    speed: 2.2 + Math.random() * 1.5, // MEDIUM SPEED
                     popped: false
                 });
                 World.add(engine.world, body);
@@ -353,10 +350,8 @@
         function createExplosion(x, y, color) {
             for(let i=0; i<25; i++) {
                 particles.push({
-                    x, y,
-                    vx: (Math.random()-0.5)*20,
-                    vy: (Math.random()-0.5)*20,
-                    life: 1.0, size: Math.random()*10 + 2, color
+                    x, y, vx: (Math.random()-0.5)*15, vy: (Math.random()-0.5)*15,
+                    life: 1.0, size: Math.random()*8 + 2, color
                 });
             }
         }
@@ -367,23 +362,19 @@
             Engine.update(engine);
             ctx.clearRect(0, 0, canvasOut.width, canvasOut.height);
             
-            // Mirror Video Underlay (Brighter & Cooler)
+            // Mirror Underlay
             ctx.save();
             ctx.scale(-1, 1);
             ctx.translate(-canvasOut.width, 0);
-            ctx.globalAlpha = 0.5;
+            ctx.globalAlpha = 0.55;
             ctx.drawImage(videoElement, 0, 0, canvasOut.width, canvasOut.height);
-            ctx.globalAlpha = 0.2;
-            ctx.fillStyle = '#020617';
-            ctx.fillRect(0,0,canvasOut.width, canvasOut.height);
             ctx.restore();
 
             // Bubbles
             bubbles.forEach(b => {
                 if(b.popped) return;
                 
-                // Manual Float + Sway Logic
-                const sx = Math.sin(frameCount * 0.05 + b.swayOffset) * 2;
+                const sx = Math.sin(frameCount * 0.04 + b.swayOffset) * 1.5;
                 Matter.Body.setPosition(b.body, {
                     x: b.body.position.x + sx,
                     y: b.body.position.y - b.speed
@@ -391,14 +382,12 @@
 
                 const { x, y } = b.body.position;
                 
-                // Draw Bubble (Premium Gloss)
                 ctx.save();
                 ctx.shadowBlur = 40;
                 ctx.shadowColor = b.color;
                 
                 const gradient = ctx.createRadialGradient(x - b.radius*0.3, y - b.radius*0.3, 0, x, y, b.radius);
                 gradient.addColorStop(0, 'rgba(255,255,255,0.4)');
-                gradient.addColorStop(0.5, 'rgba(255,255,255,0.1)');
                 gradient.addColorStop(1, 'rgba(255,255,255,0.05)');
 
                 ctx.beginPath();
@@ -409,7 +398,6 @@
                 ctx.lineWidth = 5;
                 ctx.stroke();
 
-                // Value Text
                 ctx.shadowBlur = 0;
                 ctx.fillStyle = 'white';
                 ctx.font = '900 45px Outfit';
@@ -418,11 +406,15 @@
                 ctx.fillText(b.val, x, y);
                 ctx.restore();
 
-                // Collision
-                const d = Math.hypot(handPos.x - x, handPos.y - y);
-                if(d < b.radius + 30) popBubble(b);
+                // Collision Detection with L and R hands
+                const checkPop = (hPos) => {
+                    if(!hPos.active) return false;
+                    const d = Math.hypot(hPos.x - x, hPos.y - y);
+                    return d < b.radius + 40; // Increased radius for easier touch
+                };
 
-                // Recycle if gone
+                if(checkPop(handPosL) || checkPop(handPosR)) popBubble(b);
+
                 if(y < -b.radius*2) {
                     Matter.Body.setPosition(b.body, { x: (Math.random()*0.8+0.1)*window.innerWidth, y: window.innerHeight+100 });
                 }
@@ -430,7 +422,7 @@
 
             // Particles
             particles.forEach((p, i) => {
-                p.x += p.vx; p.y += p.vy; p.life -= 0.015;
+                p.x += p.vx; p.y += p.vy; p.life -= 0.02;
                 if(p.life <= 0) particles.splice(i, 1);
                 ctx.globalAlpha = p.life;
                 ctx.beginPath();
@@ -440,19 +432,26 @@
             });
             ctx.globalAlpha = 1;
 
-            // Hand Tracker Visual (Cyber Ring)
-            ctx.beginPath();
-            ctx.arc(handPos.x, handPos.y, 25, 0, Math.PI*2);
-            ctx.strokeStyle = '#00f2ff';
-            ctx.lineWidth = 4;
-            ctx.setLineDash([10, 5]);
-            ctx.stroke();
-            ctx.setLineDash([]);
-            
-            ctx.beginPath();
-            ctx.arc(handPos.x, handPos.y, 10, 0, Math.PI*2);
-            ctx.fillStyle = 'white';
-            ctx.fill();
+            // Hand Pointer Visuals
+            const drawPointer = (pos) => {
+                if(!pos.active) return;
+                ctx.save();
+                ctx.beginPath();
+                ctx.arc(pos.x, pos.y, 25, 0, Math.PI*2);
+                ctx.strokeStyle = '#00f2ff';
+                ctx.lineWidth = 4;
+                ctx.setLineDash([8, 4]);
+                ctx.stroke();
+                ctx.setLineDash([]);
+                ctx.beginPath();
+                ctx.arc(pos.x, pos.y, 10, 0, Math.PI*2);
+                ctx.fillStyle = 'white';
+                ctx.fill();
+                ctx.restore();
+            };
+
+            drawPointer(handPosL);
+            drawPointer(handPosR);
 
             requestAnimationFrame(gameLoop);
         }
@@ -466,13 +465,13 @@
             if(b.val === curProblem.ans) {
                 score += 150;
                 document.getElementById('score').innerText = score.toString().padStart(4, '0');
-                showFeedback("LEVEL UP!", "#00f2ff");
+                showFeedback("SYNCED!", "#00f2ff");
                 setTimeout(newProblem, 400);
             } else {
                 score = Math.max(0, score - 75);
                 document.getElementById('score').innerText = score.toString().padStart(4, '0');
-                showFeedback("RETRY!", "#ef4444");
-                setTimeout(newProblem, 400);
+                showFeedback("FAIL!", "#ef4444");
+                setTimeout(newProblem, 200);
             }
         }
 
@@ -480,8 +479,8 @@
             const el = document.getElementById('feedback');
             el.innerText = txt;
             el.style.color = col;
-            gsap.fromTo(el, { scale: 0, opacity: 0 }, { scale: 1.2, opacity: 1, duration: 0.4, ease: "elastic.out(1, 0.3)", onComplete: () => {
-                gsap.to(el, { scale: 2, opacity: 0, duration: 0.4, delay: 0.2 });
+            gsap.fromTo(el, { scale: 0, opacity: 0 }, { scale: 1.2, opacity: 1, duration: 0.3, onComplete: () => {
+                gsap.to(el, { scale: 2, opacity: 0, duration: 0.3, delay: 0.2 });
             }});
         }
 
@@ -492,13 +491,13 @@
                 document.getElementById('timer').innerText = timeLeft;
                 if(timeLeft <= 0) {
                     gameActive = false;
-                    alert(`PHASE SUMMARY\nTotal Synapse Score: ${score}`);
+                    alert(`PHASE COMPLETE\nFinal Neural Score: ${score}`);
                     location.reload();
                 }
             }, 1000);
         }
 
-        // --- Hand Tracking High Accuracy ---
+        // --- Hand Tracking Dual ---
         const videoElement = document.querySelector('.input_video');
         const hands = new Hands({ locateFile: (file) => `https://cdn.jsdelivr.net/npm/@mediapipe/hands/${file}` });
         
@@ -515,13 +514,22 @@
                 document.getElementById('menuOverlay').classList.remove('hidden');
             }
 
+            handPosL.active = false;
+            handPosR.active = false;
+
             if (results.multiHandLandmarks && results.multiHandedness) {
                 for (let i = 0; i < results.multiHandLandmarks.length; i++) {
-                    const label = results.multiHandedness[i].label;
-                    if (label === selectedHandSide) {
-                        const tip = results.multiHandLandmarks[i][8];
-                        handPos.x = (1 - tip.x) * canvasOut.width;
-                        handPos.y = tip.y * canvasOut.height;
+                    const label = results.multiHandedness[i].label; // Left/Right
+                    const landmarks = results.multiHandLandmarks[i];
+                    
+                    const x = (1 - landmarks[8].x) * canvasOut.width;
+                    const y = landmarks[8].y * canvasOut.height;
+
+                    if (selectedHandSide === 'Both') {
+                        if(label === 'Left') { handPosL.x = x; handPosL.y = y; handPosL.active = true; }
+                        else { handPosR.x = x; handPosR.y = y; handPosR.active = true; }
+                    } else if (label === selectedHandSide) {
+                        handPosL.x = x; handPosL.y = y; handPosL.active = true;
                     }
                 }
             }

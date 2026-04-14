@@ -45,7 +45,7 @@
 
         .vignette {
             position: fixed; inset: 0;
-            background: radial-gradient(circle at center, transparent 30%, rgba(2, 6, 23, 0.7) 100%);
+            background: linear-gradient(135deg, rgba(139, 92, 246, 0.1) 0%, rgba(0, 242, 255, 0.1) 100%);
             z-index: 2; pointer-events: none;
         }
 
@@ -362,12 +362,16 @@
             Engine.update(engine);
             ctx.clearRect(0, 0, canvasOut.width, canvasOut.height);
             
-            // Mirror Underlay
+            // Mirror Underlay (Lighter & Vibrant)
             ctx.save();
             ctx.scale(-1, 1);
             ctx.translate(-canvasOut.width, 0);
-            ctx.globalAlpha = 0.55;
+            
+            // Photo Camera Effect: Brightness & Contrast Boost
+            ctx.filter = 'brightness(1.2) contrast(1.1) saturate(1.2)';
+            ctx.globalAlpha = 0.85; // Way more visible photogenic background
             ctx.drawImage(videoElement, 0, 0, canvasOut.width, canvasOut.height);
+            ctx.filter = 'none';
             ctx.restore();
 
             // Bubbles

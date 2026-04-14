@@ -1,297 +1,298 @@
 <!DOCTYPE html>
 <html lang="en">
-
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Classical Dance - Indian Culture</title>
+    <title>Dance Studio - 3D Culture AI</title>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;700;900&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <script src="https://cdn.jsdelivr.net/npm/@mediapipe/camera_utils/camera_utils.js" crossorigin="anonymous"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@mediapipe/pose/pose.js" crossorigin="anonymous"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@mediapipe/drawing_utils/drawing_utils.js" crossorigin="anonymous"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/gsap.min.js"></script>
+
     <style>
-        @import url('https://fonts.googleapis.com/css2?family=Outfit:wght@400;700;900&display=swap');
+        :root {
+            --primary: #f97316;
+            --accent: #d946ef;
+            --zen-dark: #0f172a;
+            --glass: rgba(255, 255, 255, 0.05);
+            --glass-border: rgba(255, 255, 255, 0.1);
+        }
 
-        body {
-            margin: 0;
-            background: linear-gradient(135deg, #fff7ed 0%, #ffedd5 100%);
-            color: #7c2d12;
+        body, html {
+            margin: 0; padding: 0;
+            width: 100%; height: 100%;
+            overflow: hidden;
+            background: #000;
             font-family: 'Outfit', sans-serif;
-            overflow: hidden;
-        }
-
-        nav {
-            display: flex;
-            justify-content: space-between;
-            padding: 20px 40px;
-            background: rgba(255, 255, 255, 0.5);
-            backdrop-filter: blur(10px);
-        }
-
-        .hud {
-            position: absolute;
-            top: 100px;
-            right: 40px;
-            background: white;
-            padding: 20px;
-            border-radius: 20px;
-            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
-            text-align: center;
-        }
-
-        .hud h2 {
-            margin: 0;
-            font-size: 2.5rem;
-            color: #ea580c;
-        }
-
-        .video-container {
-            position: relative;
-            width: 640px;
-            height: 480px;
-            margin: 30px auto;
-            border-radius: 20px;
-            overflow: hidden;
-            box-shadow: 0 20px 40px rgba(124, 45, 18, 0.2);
-            border: 4px solid white;
-        }
-
-        video {
-            transform: scaleX(-1);
-            display: none;
-        }
-
-        canvas {
-            position: absolute;
-            top: 0;
-            left: 0;
-            transform: scaleX(-1);
-        }
-
-        .instructions {
-            text-align: center;
-            font-size: 1.8rem;
-            font-weight: bold;
-            background: white;
-            padding: 20px;
-            border-radius: 20px;
-            max-width: 600px;
-            margin: 0 auto;
-            box-shadow: 0 10px 20px rgba(0, 0, 0, 0.05);
-            color: #9a3412;
-        }
-
-        .btn-back {
-            background: #ea580c;
             color: white;
-            border: none;
-            padding: 10px 20px;
-            border-radius: 50px;
-            font-weight: bold;
-            cursor: pointer;
-            transition: 0.3s;
-            font-family: 'Outfit';
         }
 
-        .btn-back:hover {
-            background: #c2410c;
+        /* Ambient Background */
+        .ambient-bg {
+            position: fixed; inset: 0;
+            background: radial-gradient(circle at center, #1e1b4b 0%, #000 100%);
+            z-index: -1;
         }
 
-        .overlay {
-            position: absolute;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background: rgba(255, 247, 237, 0.95);
-            z-index: 100;
-            display: flex;
-            flex-direction: column;
-            justify-content: center;
-            align-items: center;
-            display: none;
+        .orb {
+            position: absolute; width: 40vw; height: 40vw;
+            border-radius: 50%; filter: blur(100px);
+            opacity: 0.2; animation: float 15s infinite alternate ease-in-out;
         }
 
-        .overlay h1 {
-            font-size: 4rem;
-            color: #ea580c;
-            margin-bottom: 0;
+        @keyframes float { from { transform: translate(0, 0); } to { transform: translate(100px, 50px); } }
+
+        /* Camera Dashboard */
+        #gameArea {
+            display: grid;
+            grid-template-columns: 280px 1fr 280px;
+            height: 100vh;
+            padding: 30px;
+            gap: 20px;
         }
 
-        .pose-card {
-            position: absolute;
-            top: 100px;
-            left: 40px;
-            background: white;
-            padding: 20px;
-            border-radius: 20px;
-            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
-            font-size: 1.5rem;
-            color: #ea580c;
-            font-weight: bold;
+        .side-panel {
+            display: flex; flex-direction: column; gap: 20px;
+            z-index: 10;
+        }
+
+        .glass-card {
+            background: var(--glass);
+            backdrop-filter: blur(20px);
+            border: 1px solid var(--glass-border);
+            padding: 25px;
+            border-radius: 30px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.5);
+        }
+
+        .stat-label { font-size: 0.7rem; color: #94a3b8; text-transform: uppercase; letter-spacing: 2px; }
+        .stat-value { font-size: 2rem; font-weight: 900; color: var(--primary); }
+
+        .center-video {
+            position: relative;
+            background: #000;
+            border-radius: 40px;
+            overflow: hidden;
+            border: 2px solid var(--glass-border);
+            box-shadow: 0 0 50px rgba(249, 115, 22, 0.2);
+        }
+
+        video { display: none; }
+        canvas {
+            width: 100%; height: 100%;
+            object-fit: cover;
+            transform: scaleX(-1);
+        }
+
+        /* Pose Card */
+        #poseDisplay {
             text-align: center;
-            width: 200px;
+            display: flex; flex-direction: column; gap: 15px;
         }
 
-        .pose-img {
-            width: 100%;
-            height: 150px;
-            background: #ffedd5;
-            border-radius: 10px;
-            margin-top: 10px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 4rem;
+        .pose-icon {
+            font-size: 5rem;
+            background: rgba(255,255,255,0.05);
+            width: 120px; height: 120px;
+            display: flex; align-items: center; justify-content: center;
+            border-radius: 30px; margin: 0 auto;
+            border: 1px solid var(--glass-border);
+            color: var(--primary);
+        }
+
+        /* Success Alert */
+        #feedback {
+            position: fixed; top: 50%; left: 50%;
+            transform: translate(-50%, -50%) scale(0);
+            font-size: 5rem; font-weight: 900;
+            color: #10b981; pointer-events: none; z-index: 1000;
+            text-shadow: 0 0 30px rgba(16, 185, 129, 0.5);
+        }
+
+        .btn-exit {
+            position: fixed; top: 30px; right: 30px;
+            width: 50px; height: 50px; background: var(--glass);
+            border: 1px solid var(--glass-border); color: white;
+            border-radius: 50%; display: flex; align-items: center; justify-content: center;
+            cursor: pointer; text-decoration: none; transition: 0.3s; z-index: 100;
+        }
+        .btn-exit:hover { background: #ef4444; transform: scale(1.1); }
+
+        @media (max-width: 1024px) {
+            #gameArea { grid-template-columns: 1fr; grid-template-rows: auto 1fr auto; padding: 15px; }
+            .side-panel { flex-direction: row; justify-content: center; }
         }
     </style>
 </head>
-
 <body>
-    <nav>
-        <div style="font-weight: 900; font-size: 1.5rem;"> Classical Dance
-            Studio</div>
-        <button class="btn-back" onclick="window.close()">Exit Studio</button>
-    </nav>
-
-    <div class="hud">
-        <p style="margin:0; font-weight: bold; color: #f97316;">Dance Score</p>
-        <h2 id="scoreDisplay">0 px</h2>
+    <div class="ambient-bg">
+        <div class="orb" style="top: -10%; left: -10%; background: var(--primary);"></div>
+        <div class="orb" style="bottom: -10%; right: -10%; background: var(--accent);"></div>
     </div>
 
-    <div class="pose-card">
-        Current Target:
-        <div id="targetName" style="color: #9a3412; font-size:2rem; margin-top:10px;">Anjali Mudra</div>
-        <div class="pose-img" id="targetImg">Pose</div>
-    </div>
+    <a href="game10.html" class="btn-exit"><i class="fa-solid fa-xmark"></i></a>
 
-    <div class="overlay" id="gameOverOverlay">
-        <h1>Performance Complete</h1>
-        <p style="font-size: 1.5rem; color: #c2410c" id="finalScore">You earned 0 px</p>
-        <button class="btn-back" onclick="location.reload()"
-            style="font-size:1.5rem; padding: 15px 30px; margin-top: 20px;">Restart Session</button>
-    </div>
+    <div id="feedback">PERFECT!</div>
 
-    <div class="video-container">
-        <video id="video" width="640" height="480" autoplay playsinline></video>
-        <canvas id="canvas" width="640" height="480"></canvas>
-    </div>
+    <div id="gameArea">
+        <!-- Stats Left -->
+        <div class="side-panel">
+            <div class="glass-card">
+                <div class="stat-label">Performance</div>
+                <div class="stat-value" id="score">0</div>
+                <div style="font-size: 0.8rem; opacity: 0.6; margin-top: 5px;">ZEN POINTS</div>
+            </div>
+            
+            <div class="glass-card">
+                <div class="stat-label">Session Timer</div>
+                <div class="stat-value" id="timer">02:00</div>
+            </div>
+        </div>
 
-    <div class="instructions" id="instructionText">
-        Allow Camera Access & perform the target pose!
-    </div>
+        <!-- Video Center -->
+        <div class="center-video">
+            <video id="video" playsinline></video>
+            <canvas id="canvas"></canvas>
+            
+            <div style="position: absolute; bottom: 20px; left: 50%; transform: translateX(-50%); width: 80%; text-align: center;">
+                <div class="glass-card" style="padding: 10px 20px; border-radius: 20px;">
+                    <span id="instruction" style="font-weight: 700; color: #cbd5e1;">Align your body to start the performance</span>
+                </div>
+            </div>
+        </div>
 
-    <!-- MediaPipe scripts -->
-    <script src="https://cdn.jsdelivr.net/npm/@mediapipe/camera_utils/camera_utils.js" crossorigin="anonymous"></script>
-    <script src="https://cdn.jsdelivr.net/npm/@mediapipe/control_utils/control_utils.js"
-        crossorigin="anonymous"></script>
-    <script src="https://cdn.jsdelivr.net/npm/@mediapipe/drawing_utils/drawing_utils.js"
-        crossorigin="anonymous"></script>
-    <script src="https://cdn.jsdelivr.net/npm/@mediapipe/pose/pose.js" crossorigin="anonymous"></script>
+        <!-- Target Right -->
+        <div class="side-panel">
+            <div class="glass-card" id="poseDisplay">
+                <div class="stat-label">Target Mudra</div>
+                <div class="pose-icon" id="targetIcon">🙏</div>
+                <h2 id="targetName" style="font-weight: 900; color: #fff; margin: 0;">ANJALI</h2>
+                <p id="targetHint" style="font-size: 0.85rem; opacity: 0.6;">Hands together at chest level.</p>
+            </div>
+
+            <div class="glass-card" style="margin-top: auto;">
+                <div class="stat-label">AI SYNC</div>
+                <div style="display: flex; align-items: center; gap: 10px; margin-top: 10px;">
+                    <div id="syncDot" style="width: 10px; height: 10px; background: #fb7185; border-radius: 50%;"></div>
+                    <span id="syncStatus" style="font-size: 0.8rem; font-weight: 800;">CALIBRATING...</span>
+                </div>
+            </div>
+        </div>
+    </div>
 
     <script>
         const videoElement = document.getElementById('video');
         const canvasElement = document.getElementById('canvas');
         const canvasCtx = canvasElement.getContext('2d');
         let score = 0;
-        let poseCooldown = 0;
         let gameActive = true;
+        let timeLeft = 120;
 
-        let poses = [
-            { name: "Anjali Mudra", icon: "🙏", instruction: "Bring both hands directly together in front of your chest." },
-            { name: "Aramandi", icon: "🩰", instruction: "Half-sit: Keep hands wide out to the sides horizontally!" }
+        const POSES = [
+            { name: "ANJALI", icon: "🙏", hint: "Hands together at chest.", logic: "anjali" },
+            { name: "ARAMANDI", icon: "🩰", hint: "Arms wide, knees bent.", logic: "wide" },
+            { name: "PATHAKA", icon: "✋", hint: "One hand up, palm forward.", logic: "top" }
         ];
-        let currentPoseIdx = 0;
-        let completedPoses = 0;
+        let currentIdx = 0;
 
         function updateTarget() {
-            if (completedPoses >= 6) {
-                gameActive = false;
-                document.getElementById('finalScore').innerText = `You earned ${score} px`;
-                document.getElementById('gameOverOverlay').style.display = 'flex';
-                return;
-            }
-            currentPoseIdx = Math.floor(Math.random() * poses.length);
-            document.getElementById('targetName').innerText = poses[currentPoseIdx].name;
-            document.getElementById('targetImg').innerText = poses[currentPoseIdx].icon;
-            document.getElementById('instructionText').innerText = poses[currentPoseIdx].instruction;
+            currentIdx = (currentIdx + 1) % POSES.length;
+            const p = POSES[currentIdx];
+            document.getElementById('targetName').innerText = p.name;
+            document.getElementById('targetIcon').innerText = p.icon;
+            document.getElementById('targetHint').innerText = p.hint;
+            gsap.from("#poseDisplay", { scale: 0.8, opacity: 0, duration: 0.5, ease: "back.out" });
         }
 
-        function updatePoints() {
-            score += 20;
-            document.getElementById('scoreDisplay').innerText = score + " px";
-            document.getElementById('instructionText').innerHTML = "<span style='color: #16a34a'>Perfect Form! +20 Points</span>";
-            completedPoses++;
-
-            let activeId = localStorage.getItem('QRIO_active_id');
-            if (activeId) {
-                fetch('/api/points', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ userId: activeId, pointsToAdd: 20 })
-                }).catch(console.error);
-            }
-
-            poseCooldown = 150; // pause before next
-            setTimeout(updateTarget, 2000);
-        }
-
-        function onResults(results) {
-            if (!gameActive) return;
-
+        async function onResults(results) {
             canvasCtx.save();
             canvasCtx.clearRect(0, 0, canvasElement.width, canvasElement.height);
             canvasCtx.drawImage(results.image, 0, 0, canvasElement.width, canvasElement.height);
 
             if (results.poseLandmarks) {
-                drawConnectors(canvasCtx, results.poseLandmarks, POSE_CONNECTIONS, { color: '#ea580c', lineWidth: 4 });
+                document.getElementById('syncStatus').innerText = "LIVE SYNC";
+                document.getElementById('syncDot').style.background = "#10b981";
+                
+                drawConnectors(canvasCtx, results.poseLandmarks, POSE_CONNECTIONS, { color: '#f97316', lineWidth: 4 });
                 drawLandmarks(canvasCtx, results.poseLandmarks, { color: '#ffffff', lineWidth: 2 });
 
-                if (poseCooldown > 0) {
-                    poseCooldown--;
-                    canvasCtx.restore();
-                    return;
-                }
-
+                // Simple check
                 const lm = results.poseLandmarks;
-                let poseMatched = false;
-
-                // Anjali Mudra: Hands close together at chest level
-                if (poses[currentPoseIdx].name === "Anjali Mudra") {
-                    const leftWrist = lm[15];
-                    const rightWrist = lm[16];
-                    if (leftWrist && rightWrist && leftWrist.visibility > 0.6 && rightWrist.visibility > 0.6) {
-                        const dist = Math.sqrt(Math.pow(leftWrist.x - rightWrist.x, 2) + Math.pow(leftWrist.y - rightWrist.y, 2));
-                        // Hands close
-                        if (dist < 0.1) poseMatched = true;
-                    }
+                let match = false;
+                
+                if (POSES[currentIdx].logic === "anjali") {
+                    const dist = Math.abs(lm[15].x - lm[16].x);
+                    if (dist < 0.1 && lm[15].visibility > 0.5) match = true;
+                } else if (POSES[currentIdx].logic === "wide") {
+                    const dist = Math.abs(lm[15].x - lm[16].x);
+                    if (dist > 0.6) match = true;
+                } else {
+                    if (lm[15].y < lm[11].y || lm[16].y < lm[12].y) match = true;
                 }
 
-                // Aramandi (approximate arms out wide)
-                if (poses[currentPoseIdx].name === "Aramandi") {
-                    const lShoulder = lm[11], rShoulder = lm[12];
-                    const lWrist = lm[15], rWrist = lm[16];
-                    if (lShoulder && rShoulder && lWrist && rWrist) {
-                        // hands far apart horizontally, Y similar to shoulder
-                        const xDist = Math.abs(lWrist.x - rWrist.x);
-                        if (xDist > 0.6) poseMatched = true; // basic approximation
-                    }
+                if (match) {
+                    success();
                 }
-
-                if (poseMatched) updatePoints();
             }
             canvasCtx.restore();
         }
 
-        const pose = new Pose({
-            locateFile: (file) => `https://cdn.jsdelivr.net/npm/@mediapipe/pose/${file}`
-        });
-        pose.setOptions({ modelComplexity: 1, smoothLandmarks: true, minDetectionConfidence: 0.5, minTrackingConfidence: 0.5 });
+        function success() {
+            if(!gameActive) return;
+            score += 500;
+            document.getElementById('score').innerText = score;
+            const f = document.getElementById('feedback');
+            gsap.fromTo(f, { scale: 0, opacity: 0 }, { scale: 1, opacity: 1, duration: 0.5, yoyo: true, repeat: 1 });
+            gameActive = false; // Cooldown
+            syncPoints(500);
+            setTimeout(() => { gameActive = true; updateTarget(); }, 3000);
+        }
+
+        function syncPoints(pts) {
+            const uid = localStorage.getItem('qrio_active_id');
+            if(uid) {
+                fetch('/api/points', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ userId: uid, pointsToAdd: pts })
+                }).catch(e => console.error(e));
+            }
+        }
+
+        const pose = new Pose({ locateFile: (file) => `https://cdn.jsdelivr.net/npm/@mediapipe/pose/${file}` });
+        pose.setOptions({ modelComplexity: 1, minDetectionConfidence: 0.5, minTrackingConfidence: 0.5 });
         pose.onResults(onResults);
 
-        const camera = new Camera(videoElement, {
-            onFrame: async () => { await pose.send({ image: videoElement }); },
-            width: 640, height: 480
+        // Simple webcam setup
+        navigator.mediaDevices.getUserMedia({ video: { width: 1280, height: 720 } }).then(stream => {
+            videoElement.srcObject = stream;
+            videoElement.play();
+            const process = async () => {
+                await pose.send({ image: videoElement });
+                requestAnimationFrame(process);
+            };
+            process();
         });
-        camera.start();
-        updateTarget();
+
+        // Timer
+        setInterval(() => {
+            if (timeLeft > 0) {
+                timeLeft--;
+                let m = Math.floor(timeLeft / 60);
+                let s = timeLeft % 60;
+                document.getElementById('timer').innerText = `${String(m).padStart(2,'0')}:${String(s).padStart(2,'0')}`;
+            }
+        }, 1000);
+
+        // Adjust canvas
+        window.addEventListener('resize', () => {
+            canvasElement.width = canvasElement.offsetWidth;
+            canvasElement.height = canvasElement.offsetHeight;
+        });
+        window.dispatchEvent(new Event('resize'));
     </script>
 </body>
-
 </html>

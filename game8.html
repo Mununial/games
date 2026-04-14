@@ -6,66 +6,121 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Civics City Builder - QRIO</title>
     <style>
+        @import url('https://fonts.googleapis.com/css2?family=Outfit:wght@400;700;900&family=Inter:wght@400;700;900&display=swap');
+
         @import url('https://fonts.googleapis.com/css2?family=Outfit:wght@400;700;900&display=swap');
 
-        body {
+        :root {
+            --primary: #f59e0b; /* Amber */
+            --accent: #6366f1;  /* Indigo */
+            --bg-base: #f8fafc;
+            --pastel-blue: #e0f2fe;
+            --pastel-purple: #f3e8ff;
+            --card-bg: rgba(255, 255, 255, 0.85);
+            --text-main: #1e293b;
+            --text-muted: #64748b;
+            --sketch-border: 2px solid #334155;
+            --soft-shadow: 6px 6px 0px rgba(0, 0, 0, 0.05);
+            --transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        }
+
+        body, html {
             margin: 0;
-            background: #fef3c7;
-            color: #78350f;
+            padding: 0;
+            width: 100%;
+            height: 100%;
+            overflow-x: hidden;
+            background: linear-gradient(135deg, var(--pastel-blue) 0%, var(--pastel-purple) 100%);
+            color: var(--text-main);
             font-family: 'Outfit', sans-serif;
-            overflow: hidden;
             display: flex;
             flex-direction: column;
-            height: 100vh;
+        }
+
+        /* Doodle Pattern Overlay */
+        body::after {
+            content: '';
+            position: fixed;
+            top: 0; left: 0; width: 100%; height: 100%;
+            opacity: 0.04;
+            pointer-events: none;
+            z-index: -1;
+            background-image: url("data:image/svg+xml,%3Csvg width='120' height='120' viewBox='0 0 120 120' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M10 10 Q 30 5, 40 20 T 70 10' fill='none' stroke='%23334155' stroke-width='2'/%3E%3Cpath d='M80 80 Q 90 70, 100 90' fill='none' stroke='%23334155' stroke-width='2'/%3E%3Ccircle cx='20' cy='100' r='5' fill='none' stroke='%23334155' stroke-width='2'/%3E%3C/svg%3E");
         }
 
         nav {
             display: flex;
             justify-content: space-between;
-            padding: 20px 40px;
-            background: rgba(255, 255, 255, 0.7);
-            backdrop-filter: blur(10px);
-            border-bottom: 2px solid #fde68a;
+            align-items: center;
+            padding: 24px 40px;
+            background: var(--card-bg);
+            backdrop-filter: blur(20px);
+            border-bottom: var(--sketch-border);
+            z-index: 100;
+            gap: 20px;
+            box-shadow: var(--soft-shadow);
+        }
+
+        .nav-logo {
+            font-weight: 900;
+            font-size: 1.5rem;
+            color: var(--text-main);
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            white-space: nowrap;
         }
 
         .hud {
             display: flex;
-            gap: 30px;
+            gap: 40px;
+            align-items: center;
+            justify-content: center;
+            flex-grow: 1;
         }
 
         .stat {
             text-align: center;
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
         }
 
         .stat h3 {
-            color: #b45309;
+            color: var(--text-muted);
             margin: 0;
-            font-size: 0.9rem;
+            font-size: 0.7rem;
             text-transform: uppercase;
+            letter-spacing: 2px;
+            font-weight: 900;
         }
 
         .stat p {
-            margin: 5px 0 0;
-            font-size: 1.5rem;
-            font-weight: bold;
-            color: #92400e;
+            margin: 0;
+            font-size: 1.4rem;
+            font-weight: 900;
+            color: var(--primary);
+            text-shadow: 1px 1px 0 white;
         }
 
         .btn-exit {
-            background: transparent;
-            color: #b45309;
-            border: 2px solid #b45309;
-            padding: 10px 20px;
+            background: white;
+            color: #ef4444;
+            border: var(--sketch-border);
+            padding: 10px 24px;
             border-radius: 50px;
-            font-weight: bold;
+            font-weight: 900;
             cursor: pointer;
-            transition: 0.3s;
-            font-family: 'Outfit';
+            transition: var(--transition);
+            font-size: 0.9rem;
+            white-space: nowrap;
+            box-shadow: 4px 4px 0px #334155;
         }
 
         .btn-exit:hover {
-            background: #b45309;
+            background: #ef4444;
             color: white;
+            transform: rotate(-3deg) scale(1.05);
         }
 
         .game-area {
@@ -74,49 +129,56 @@
             align-items: center;
             justify-content: center;
             position: relative;
+            padding: 24px;
         }
 
         .city-bg {
             position: absolute;
-            bottom: 0;
-            width: 100%;
-            height: 40%;
-            background: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1000 200"><path d="M0,200 L0,100 L50,100 L50,80 L100,80 L100,120 L200,120 L200,50 L300,50 L300,150 L400,150 L400,90 L500,90 L500,40 L600,40 L600,110 L700,110 L700,60 L800,60 L800,130 L900,130 L900,70 L1000,70 L1000,200 Z" fill="%23fde68a"/></svg>') repeat-x;
-            background-size: contain;
-            z-index: -1;
-            animation: drift 40s linear infinite;
+            bottom: 0; left: 0; width: 100%; height: 40%;
+            background: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1000 200"><path d="M0,200 L0,100 L50,100 L50,80 L100,80 L100,120 L200,120 L200,50 L300,50 L300,150 L400,150 L400,90 L500,90 L500,40 L600,40 L600,110 L700,110 L700,60 L800,60 L800,130 L900,130 L900,70 L1000,70 L1000,200 Z" fill="%23334155" opacity="0.05"/></svg>') repeat-x;
+            background-size: cover;
+            z-index: 1;
+            animation: drift 60s linear infinite;
         }
 
         @keyframes drift {
-            0% {
-                background-position: 0 0;
-            }
-
-            100% {
-                background-position: -1000px 0;
-            }
+            from { background-position: 0 0; }
+            to { background-position: -2000px 0; }
         }
 
         .event-card {
-            background: white;
-            padding: 40px;
-            border-radius: 20px;
-            box-shadow: 0 20px 40px rgba(120, 53, 15, 0.1);
+            background: var(--card-bg);
+            backdrop-filter: blur(24px);
+            border: var(--sketch-border);
+            padding: 48px;
+            border-radius: 24px 22px 26px 20px;
             text-align: center;
-            max-width: 500px;
+            max-width: 540px;
             z-index: 10;
-            border: 2px solid #fde68a;
+            box-shadow: 8px 8px 0px rgba(0, 0, 0, 0.05);
+            animation: cardEntrance 0.8s cubic-bezier(0.16, 1, 0.3, 1);
+        }
+
+        @keyframes cardEntrance {
+            from { opacity: 0; transform: translateY(30px) scale(0.95); }
+            to { opacity: 1; transform: translateY(0) scale(1); }
         }
 
         .event-card h2 {
             margin-top: 0;
-            font-size: 2rem;
-            color: #92400e;
+            font-size: 2.5rem;
+            font-weight: 900;
+            color: var(--text-main);
+            margin-bottom: 24px;
+            text-shadow: 2px 2px 0 white;
         }
 
         .event-card p {
-            font-size: 1.2rem;
-            margin-bottom: 30px;
+            font-size: 1.15rem;
+            line-height: 1.6;
+            margin-bottom: 40px;
+            color: var(--text-muted);
+            font-weight: 700;
         }
 
         .decisions {
@@ -126,15 +188,17 @@
         }
 
         .btn-decision {
-            padding: 15px 30px;
-            font-size: 1.2rem;
-            font-weight: bold;
-            border: none;
-            border-radius: 12px;
+            padding: 18px 36px;
+            font-size: 1.1rem;
+            font-weight: 900;
+            border: var(--sketch-border);
+            border-radius: 50px;
             cursor: pointer;
-            transition: 0.2s;
-            font-family: 'Outfit';
+            transition: var(--transition);
             flex: 1;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            box-shadow: 4px 4px 0px #334155;
         }
 
         .btn-yes {
@@ -143,8 +207,8 @@
         }
 
         .btn-yes:hover {
+            transform: scale(1.05) rotate(1deg);
             background: #059669;
-            transform: translateY(-3px);
         }
 
         .btn-no {
@@ -153,52 +217,74 @@
         }
 
         .btn-no:hover {
+            transform: scale(1.05) rotate(-1deg);
             background: #dc2626;
-            transform: translateY(-3px);
         }
 
         .game-over {
-            position: absolute;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background: rgba(254, 243, 199, 0.95);
-            z-index: 100;
+            position: fixed;
+            inset: 0;
+            background: rgba(224, 242, 254, 0.95);
+            backdrop-filter: blur(20px);
+            z-index: 1000;
             display: none;
             flex-direction: column;
             justify-content: center;
             align-items: center;
+            text-align: center;
+            padding: 40px;
         }
 
         .game-over h1 {
-            color: #dc2626;
+            color: #ef4444;
             font-size: 4rem;
-            margin-bottom: 10px;
-        }
-
-        .game-over p {
-            color: #92400e;
-            font-size: 1.5rem;
+            font-weight: 900;
+            margin: 0;
+            text-shadow: 3px 3px 0 white;
         }
 
         .btn-restart {
-            background: #d97706;
+            background: var(--primary);
             color: white;
-            border: none;
-            padding: 15px 40px;
+            border: var(--sketch-border);
+            padding: 20px 48px;
             border-radius: 50px;
-            font-size: 1.2rem;
-            font-weight: bold;
+            font-size: 1.25rem;
+            font-weight: 900;
             cursor: pointer;
-            margin-top: 20px;
+            margin-top: 40px;
+            transition: var(--transition);
+            text-transform: uppercase;
+            box-shadow: 6px 6px 0px #334155;
         }
+
+        .btn-restart:hover {
+            transform: scale(1.05) rotate(-1deg);
+            background: var(--accent);
+        }
+
+        @media (max-width: 1024px) {
+            .hud { gap: 20px; }
+            nav { padding: 20px; }
+        }
+
+        @media (max-width: 768px) {
+            nav { flex-direction: column; padding: 15px; }
+            .hud { flex-wrap: wrap; width: 100%; border-top: 1px dashed #cbd5e1; padding-top: 10px;}
+            .stat { flex: 1; min-width: 80px; }
+            .btn-exit { width: 100%; margin-top: 10px; }
+            .nav-logo { display: none; }
+            .event-card { padding: 30px; }
+            .btn-decision { padding: 15px; font-size: 1rem; }
+        }
+
     </style>
 </head>
 
 <body>
     <nav>
-        <div style="font-weight: 900; font-size: 1.5rem;"><i class="fa-solid fa-landmark-dome"></i> Civics City Builder
+        <div class="nav-logo">
+            <i class="fa-solid fa-landmark-dome"></i> <span>Qrio • City Builder</span>
         </div>
         <div class="hud">
             <div class="stat">
@@ -218,7 +304,7 @@
                 <p id="stat-score" style="color:#d97706;">0 px</p>
             </div>
         </div>
-        <button class="btn-exit" onclick="window.close()">Exit City</button>
+        <button class="btn-exit" onclick="window.close()">Exit to HUB</button>
     </nav>
 
     <div class="game-area">
@@ -279,7 +365,7 @@
 
         function awardPoints(amount) {
             score += amount;
-            let activeId = localStorage.getItem('QRIO_active_id');
+            let activeId = localStorage.getItem('qrio_active_id');
             if (activeId) {
                 fetch('/api/points', {
                     method: 'POST',

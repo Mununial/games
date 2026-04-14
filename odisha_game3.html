@@ -7,40 +7,75 @@
     <title>Electric Circuit - BSE Odisha</title>
     <link href="https://fonts.googleapis.com/css2?family=Mukta+Malar:wght@400;700&display=swap" rel="stylesheet">
     <style>
-        body {
+        @import url('https://fonts.googleapis.com/css2?family=Mukta+Malar:wght@400;700&family=Outfit:wght@400;700;900&display=swap');
+
+        :root {
+            --primary: #0ea5e9; /* Sky Blue */
+            --accent: #6366f1;  /* Indigo */
+            --bg-base: #f8fafc;
+            --pastel-blue: #e0f2fe;
+            --pastel-gray: #f1f5f9;
+            --card-bg: rgba(255, 255, 255, 0.85);
+            --text-main: #1e293b;
+            --text-muted: #64748b;
+            --sketch-border: 2px solid #334155;
+            --soft-shadow: 6px 6px 0px rgba(0, 0, 0, 0.05);
+            --transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        }
+
+        body, html {
             margin: 0;
-            background: #262626;
-            color: white;
+            padding: 0;
+            width: 100%;
+            height: 100%;
+            overflow-x: hidden;
+            background: linear-gradient(135deg, var(--pastel-blue) 0%, var(--pastel-gray) 100%);
+            color: var(--text-main);
+            font-family: 'Outfit', 'Mukta Malar', sans-serif;
             display: flex;
             flex-direction: column;
             align-items: center;
             justify-content: center;
-            height: 100vh;
-            font-family: 'Mukta Malar', sans-serif;
-            overflow: hidden;
+        }
+
+        /* Doodle Pattern Overlay */
+        body::after {
+            content: '';
+            position: fixed;
+            top: 0; left: 0; width: 100%; height: 100%;
+            opacity: 0.05;
+            pointer-events: none;
+            z-index: -1;
+            background-image: url("data:image/svg+xml,%3Csvg width='120' height='120' viewBox='0 0 120 120' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M10 10 Q 30 5, 40 20 T 70 10' fill='none' stroke='%23334155' stroke-width='2'/%3E%3Cpath d='M30 100 L 50 100 M 40 90 L 40 110' stroke='%23334155' stroke-width='2'/%3E%3Cpath d='M80 30 Q 90 20, 100 30' fill='none' stroke='%23334155' stroke-width='2'/%3E%3C/svg%3E");
         }
 
         h1 {
+            font-size: 2.2rem;
+            font-weight: 900;
             margin: 0 0 10px 0;
-            color: #38bdf8;
+            color: var(--text-main);
+            text-shadow: 2px 2px 0 white;
             text-align: center;
         }
 
         p {
             margin: 0 0 30px 0;
-            font-size: 1.2rem;
+            font-size: 1.25rem;
+            font-weight: 700;
+            color: var(--text-muted);
             text-align: center;
-            color: #a3a3a3;
         }
 
         .workspace {
             width: 600px;
             height: 400px;
-            background: #404040;
-            border-radius: 20px;
+            background: var(--card-bg);
+            border-radius: 24px 26px 22px 28px;
             position: relative;
-            border: 4px dashed #737373;
-            box-shadow: inset 0 0 20px rgba(0, 0, 0, 0.5);
+            border: var(--sketch-border);
+            box-shadow: var(--soft-shadow);
+            backdrop-filter: blur(20px);
+            overflow: hidden;
         }
 
         .item {
@@ -50,146 +85,132 @@
             flex-direction: column;
             align-items: center;
             justify-content: center;
-            transition: 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            transition: var(--transition);
             user-select: none;
         }
 
         .item i {
             font-size: 4rem;
-            text-shadow: 0 4px 6px rgba(0, 0, 0, 0.3);
-            transition: 0.3s;
+            filter: drop-shadow(4px 4px 0px rgba(0,0,0,0.1));
         }
 
         .item span {
             margin-top: 10px;
-            font-weight: bold;
-            padding: 2px 10px;
-            background: rgba(0, 0, 0, 0.5);
-            border-radius: 10px;
+            font-weight: 900;
+            padding: 4px 12px;
+            background: white;
+            border-radius: 50px;
             font-size: 0.9rem;
+            border: var(--sketch-border);
+            box-shadow: 4px 4px 0px rgba(0,0,0,0.05);
         }
 
-        #bulb {
-            top: 50px;
-            left: 250px;
-        }
-
-        #bulb i {
-            color: #525252;
-        }
-
-        /* Note: using emoji/icon logic below */
-
-        #battery {
-            bottom: 50px;
-            left: 100px;
-        }
-
-        #switch {
-            bottom: 50px;
-            right: 100px;
-        }
+        #bulb { top: 50px; left: 250px; }
+        #battery { bottom: 50px; left: 100px; }
+        #switch { bottom: 50px; right: 100px; }
 
         .wire {
             position: absolute;
-            border: 3px solid #ef4444;
-            border-radius: 20px;
-            display: none;
-            transform-origin: left top;
-            z-index: 0;
-            box-shadow: 0 0 5px #ef4444;
-        }
-
-        /* Wiring Paths */
-        #wire1 {
-            top: 110px;
-            left: 275px;
-            width: 3px;
-            height: 190px;
-        }
-
-        /* bulb down */
-        #wire2 {
-            top: 300px;
-            left: 140px;
-            width: 135px;
-            height: 3px;
-        }
-
-        /* bottom left to center */
-        #wire3 {
-            top: 300px;
-            left: 275px;
-            width: 165px;
-            height: 3px;
-        }
-
-        /* center to right */
-        .btn {
-            background: #0284c7;
-            color: white;
-            border: none;
-            padding: 10px 30px;
+            background: #ef4444;
             border-radius: 50px;
-            font-size: 1.2rem;
-            font-weight: bold;
+            display: none;
+            z-index: 0;
+            box-shadow: 0 0 10px rgba(239, 68, 68, 0.3);
+        }
+
+        #wire1 { top: 110px; left: 278px; width: 4px; height: 180px; }
+        #wire2 { top: 300px; left: 140px; width: 140px; height: 4px; }
+        #wire3 { top: 300px; left: 280px; width: 160px; height: 4px; }
+
+        .btn {
+            background: var(--primary);
+            color: white;
+            border: var(--sketch-border);
+            padding: 15px 40px;
+            border-radius: 50px;
+            font-size: 1.25rem;
+            font-weight: 900;
             cursor: pointer;
             margin-top: 30px;
-            font-family: 'Mukta Malar';
-            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.3);
+            transition: var(--transition);
+            box-shadow: 6px 6px 0px #334155;
+            text-transform: uppercase;
         }
 
         .btn:hover:not(:disabled) {
-            background: #0369a1;
+            transform: scale(1.05) rotate(1deg);
+            background: var(--accent);
         }
 
         .btn:disabled {
-            background: #525252;
-            color: #a3a3a3;
+            background: #cbd5e1;
+            color: #64748b;
             cursor: not-allowed;
+            box-shadow: none;
+            transform: none;
         }
 
         .glow-effect {
-            box-shadow: 0 0 50px #facc15, inset 0 0 20px #facc15;
-            background: radial-gradient(circle, rgba(250, 204, 21, 1) 0%, rgba(250, 204, 21, 0) 70%);
+            background: radial-gradient(circle, rgba(250, 204, 21, 0.6) 0%, rgba(250, 204, 21, 0) 70%);
             position: absolute;
-            width: 200px;
-            height: 200px;
-            top: 0px;
-            left: 200px;
+            width: 300px;
+            height: 300px;
+            top: -50px;
+            left: 150px;
             border-radius: 50%;
             opacity: 0;
-            transition: 0.5s;
+            transition: 0.8s;
             pointer-events: none;
         }
 
         .win-overlay {
             position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background: rgba(38, 38, 38, 0.95);
+            inset: 0;
+            background: rgba(224, 242, 254, 0.95);
+            backdrop-filter: blur(20px);
             display: none;
             flex-direction: column;
             justify-content: center;
             align-items: center;
-            z-index: 100;
+            z-index: 1000;
             text-align: center;
+            padding: 40px;
         }
 
         .win-overlay h2 {
             font-size: 4rem;
-            color: #38bdf8;
+            font-weight: 900;
+            color: var(--text-main);
             margin: 0;
+            text-shadow: 3px 3px 0 white;
         }
+
+        .btn-exit {
+            position: absolute;
+            top: 24px;
+            right: 24px;
+            background: white;
+            border: var(--sketch-border);
+            color: var(--primary);
+            padding: 10px 24px;
+            border-radius: 50px;
+            font-weight: 900;
+            cursor: pointer;
+            transition: var(--transition);
+            box-shadow: 4px 4px 0px #334155;
+        }
+
+        .btn-exit:hover {
+            transform: scale(1.05) rotate(-2deg);
+            background: #ef4444;
+            color: white;
+        }
+
     </style>
 </head>
 
 <body>
-    <button onclick="window.close()"
-        style="position:absolute; top:20px; right:20px; background:transparent; border:2px solid #38bdf8; color:#38bdf8; padding:5px 15px; border-radius:20px; font-family:'Mukta Malar'; cursor:pointer; font-weight:bold;">ବନ୍ଦ
-        କରନ୍ତୁ (Exit)</button>
+    <button class="btn-exit" onclick="window.close()">ବନ୍ଦ କରନ୍ତୁ (Exit)</button>
     <h1>ବିଦ୍ୟୁତ ସ୍ରୋତ ଏବଂ ସର୍କିଟ (Electric Current & Circuit)</h1>
     <p>Click "Connect Wires" and then turn on the Switch to light the bulb.</p>
     <div class="workspace" id="ws">
@@ -255,7 +276,7 @@
             }
         }
         function awardPoints() {
-            let activeId = localStorage.getItem('QRIO_active_id');
+            let activeId = localStorage.getItem('qrio_active_id');
             if (activeId) {
                 fetch('/api/points', {
                     method: 'POST',

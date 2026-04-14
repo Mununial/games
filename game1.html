@@ -1,994 +1,383 @@
 <!DOCTYPE html>
 <html lang="en">
-
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Sonic Chemical Lab - Speech Edition</title>
+    <title>Sonic Chemical Lab - 3D Reactor</title>
+    
+    <!-- Matter.js for physics atoms -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/matter-js/0.19.0/matter.min.js"></script>
-    <style>
-        @import url('https://fonts.googleapis.com/css2?family=Cinzel:wght@500;700;900&family=Quicksand:wght@400;700;900&display=swap');
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/gsap.min.js"></script>
+    
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;700;900&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 
-        body,
-        html {
-            margin: 0;
-            padding: 0;
-            width: 100%;
-            height: 100%;
-            overflow: hidden;
-            background: #ffffff;
-            /* Changed from dark to white for 3js sync */
-            font-family: 'Quicksand', sans-serif;
-            color: #fff;
+    <style>
+        :root {
+            --primary: #fb7185;
+            --accent: #facc15;
+            --reactor-bg: #0f172a;
+            --glass: rgba(255, 255, 255, 0.05);
+            --glass-border: rgba(255, 255, 255, 0.1);
         }
 
+        body, html {
+            margin: 0; padding: 0;
+            width: 100%; height: 100%;
+            overflow: hidden;
+            background: #000;
+            font-family: 'Outfit', sans-serif;
+            color: white;
+        }
+
+        /* Support for Global Theme Sync */
+        [data-theme="light"] body {
+            background: #f8fafc;
+            color: #0f172a;
+        }
+        [data-theme="light"] .glass-card {
+            background: rgba(255,255,255,0.8);
+            border-color: rgba(0,0,0,0.1);
+            color: #0f172a;
+        }
+        [data-theme="light"] .voice-box {
+            background: rgba(255,255,255,0.9);
+            border-color: rgba(0,0,0,0.1);
+            color: #0f172a;
+        }
+
+        /* 3D Background */
         #bgCanvas {
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100vw;
-            height: 100vh;
+            position: fixed; inset: 0;
             z-index: -1;
+            opacity: 0.5;
         }
 
         #gameCanvas {
-            display: block;
-            width: 100vw;
-            height: 100vh;
-            position: absolute;
-            top: 0;
-            left: 0;
-            z-index: 1;
+            display: block; width: 100vw; height: 100vh;
+            position: absolute; top: 0; left: 0; z-index: 1;
         }
 
-        /* Overlay */
+        /* UI HUD */
         .ui-layer {
-            position: absolute;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            z-index: 10;
-            pointer-events: none;
-            display: flex;
-            flex-direction: column;
-            justify-content: space-between;
-            padding: 2rem;
-            box-sizing: border-box;
-        }
-
-        .header {
-            display: flex;
-            justify-content: space-between;
-            align-items: flex-start;
-        }
-
-        .title-box {
-            background: rgba(45, 12, 79, 0.4);
-            backdrop-filter: blur(10px);
-            border: 2px solid rgba(138, 43, 226, 0.5);
-            padding: 1rem 2rem;
-            border-radius: 20px;
-            box-shadow: 0 0 30px rgba(138, 43, 226, 0.3);
-        }
-
-        .title-box h1 {
-            font-family: 'Cinzel', serif;
-            margin: 0;
-            font-size: 2.5rem;
-            background: linear-gradient(90deg, #c084fc, #ec4899);
-            -webkit-background-clip: text;
-            background-clip: text;
-            -webkit-text-fill-color: transparent;
-        }
-
-        .stats-box {
-            background: rgba(0, 0, 0, 0.6);
-            backdrop-filter: blur(10px);
-            padding: 1rem 2rem;
-            border-radius: 20px;
-            border: 1px solid rgba(255, 255, 255, 0.2);
-            font-size: 1.8rem;
-            font-weight: 900;
-            display: flex;
-            gap: 30px;
-            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
-        }
-
-        .legend-box {
-            background: rgba(17, 24, 39, 0.8);
-            backdrop-filter: blur(12px);
-            padding: 1.5rem;
-            border-radius: 20px;
-            border: 2px solid #3b82f6;
-            box-shadow: 0 0 20px rgba(59, 130, 246, 0.3);
-            align-self: flex-start;
-            margin-top: auto;
-            margin-bottom: auto;
-        }
-
-        .legend-box h3 {
-            margin: 0 0 10px 0;
-            color: #93c5fd;
-            font-family: 'Cinzel', serif;
-        }
-
-        .legend-box ul {
-            list-style-type: none;
-            padding: 0;
-            margin: 0 0 15px 0;
-            line-height: 1.5;
-            font-weight: bold;
-        }
-
-        .mic-status {
-            font-size: 1.2rem;
-            font-weight: bold;
-            color: #fb7185;
-            animation: pulseMic 1.5s infinite alternate;
-        }
-
-        @keyframes pulseMic {
-            from {
-                text-shadow: 0 0 5px currentColor;
-            }
-
-            to {
-                text-shadow: 0 0 15px currentColor;
-            }
-        }
-
-        .feedback-text {
-            position: absolute;
-            top: 50%;
-            left: 50%;
-            transform: translate(-50%, -50%) scale(0.5);
-            font-size: 6rem;
-            font-family: 'Cinzel', serif;
-            font-weight: 900;
-            opacity: 0;
-            transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
-            text-shadow: 0 0 40px rgba(255, 255, 255, 0.8);
-            pointer-events: none;
-            z-index: 50;
-        }
-
-        .feedback-text.show {
-            opacity: 1;
-            transform: translate(-50%, -50%) scale(1);
-        }
-
-        /* Screens */
-        .screen {
-            position: absolute;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background: rgba(10, 3, 20, 0.95);
+            position: fixed; inset: 0;
             z-index: 100;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            backdrop-filter: blur(10px);
+            pointer-events: none;
+            display: flex; flex-direction: column;
+            padding: 24px;
         }
 
-        #startScreen h1,
-        #gameOverScreen h1 {
-            font-family: 'Cinzel', serif;
-            font-size: 5rem;
-            margin-bottom: 20px;
-            color: #e9d5ff;
-            text-shadow: 0 0 20px #a855f7;
-            text-align: center;
+        .top-hud {
+            display: flex; justify-content: space-between; align-items: center;
+            width: 100%;
         }
 
-        .instructions {
-            max-width: 600px;
-            text-align: left;
-            font-size: 1.2rem;
-            line-height: 1.6;
-            background: rgba(255, 255, 255, 0.05);
-            padding: 2rem;
-            border-radius: 15px;
-            border: 1px solid rgba(255, 255, 255, 0.2);
-            margin-bottom: 2rem;
+        .glass-card {
+            background: var(--glass);
+            backdrop-filter: blur(20px);
+            border: 1px solid var(--glass-border);
+            padding: 15px 30px;
+            border-radius: 20px;
+            pointer-events: all;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.5);
+            display: flex; gap: 30px;
         }
 
-        .instructions span {
-            color: #fca5a5;
-            font-weight: bold;
-        }
+        .stat { text-align: center; }
+        .stat-label { font-size: 0.7rem; color: #94a3b8; text-transform: uppercase; letter-spacing: 1px; }
+        .stat-value { font-size: 1.6rem; font-weight: 900; color: var(--primary); }
 
-        button {
-            pointer-events: auto;
+        .btn-home {
+            width: 60px; height: 60px;
+            background: var(--glass); border: 1px solid var(--glass-border);
+            border-radius: 50%; display: flex; align-items: center; justify-content: center;
+            color: white; cursor: pointer; text-decoration: none;
+            transition: 0.3s; pointer-events: all;
+        }
+        .btn-home:hover { background: #f43f5e; border-color: #f43f5e; transform: scale(1.1); }
+
+        /* Voice Status Box */
+        .voice-box {
+            position: fixed; bottom: 30px; left: 50%;
+            transform: translateX(-50%);
+            background: var(--glass);
+            backdrop-filter: blur(20px);
+            border: 1px solid var(--glass-border);
             padding: 15px 40px;
-            font-size: 1.5rem;
-            font-family: 'Cinzel', serif;
-            font-weight: bold;
-            background: transparent;
-            color: #e9d5ff;
-            border: 2px solid #a855f7;
-            border-radius: 30px;
-            cursor: pointer;
-            transition: all 0.3s;
-            box-shadow: 0 0 15px rgba(168, 85, 247, 0.4) inset, 0 0 20px rgba(168, 85, 247, 0.4);
+            border-radius: 50px;
+            display: flex; align-items: center; gap: 15px;
+            width: 100%; max-width: 500px;
+            z-index: 200;
         }
 
-        button:hover {
-            background: rgba(168, 85, 247, 0.2);
-            box-shadow: 0 0 25px rgba(168, 85, 247, 0.8) inset, 0 0 40px rgba(168, 85, 247, 0.6);
-            transform: scale(1.05);
+        .mic-dot {
+            width: 12px; height: 12px;
+            background: #fb7185; border-radius: 50%;
+            box-shadow: 0 0 15px #fb7185;
+            animation: pulse 1s infinite alternate;
         }
+
+        @keyframes pulse { from { opacity: 0.3; } to { opacity: 1; } }
+
+        #voiceTranscript { font-weight: 700; font-size: 1rem; color: #cbd5e1; }
+
+        /* Feedback Text */
+        #feedback {
+            position: fixed; top: 50%; left: 50%;
+            transform: translate(-50%, -50%) scale(0);
+            font-size: 6rem; font-weight: 900;
+            opacity: 0; pointer-events: none; z-index: 500;
+            text-shadow: 0 0 30px rgba(251, 113, 133, 0.5);
+        }
+
+        /* Start Screen */
+        #startScreen, #gameOverScreen {
+            position: fixed; inset: 0; z-index: 2000;
+            background: #0f172a;
+            display: flex; flex-direction: column; align-items: center; justify-content: center;
+            text-align: center; padding: 40px;
+        }
+
+        .btn-primary {
+            background: var(--primary); color: white;
+            padding: 20px 50px; border-radius: 50px;
+            font-weight: 900; border: none; font-size: 1.4rem;
+            cursor: pointer; box-shadow: 0 10px 30px rgba(251, 113, 133, 0.4);
+            margin-top: 30px;
+        }
+        .btn-primary:hover { transform: translateY(-5px); box-shadow: 0 15px 40px rgba(251, 113, 133, 0.5); }
+
+        /* Mobile Adjustments */
         @media (max-width: 768px) {
-            .ui-layer { padding: 0.5rem; }
-            .title-box { padding: 0.5rem 1rem; }
-            .title-box h1 { font-size: 1.2rem; }
-            .stats-box { font-size: 1rem; padding: 0.5rem 1rem; gap: 10px; }
-            .legend-box { display: none; } 
-            
-            #startScreen, #gameOverScreen { padding: 15px; justify-content: flex-start; padding-top: 10%; }
-            #startScreen h1, #gameOverScreen h1 { font-size: 1.8rem; margin-top: 20px; }
-            .instructions { font-size: 0.85rem; padding: 1rem; margin-bottom: 1.5rem; width: 90%; }
-            button { padding: 10px 25px; font-size: 1rem; }
+            .glass-card { padding: 10px 15px; gap: 10px; }
+            .stat-value { font-size: 1.1rem; }
+            .voice-box { width: 90%; bottom: 20px; padding: 10px 20px; }
         }
     </style>
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 </head>
-
 <body>
-
-    <!-- Three.js Canvas -->
     <canvas id="bgCanvas"></canvas>
-
     <canvas id="gameCanvas"></canvas>
 
     <div class="ui-layer">
-        <div class="header">
-            <div style="display:flex; gap:15px; align-items:flex-start;">
-                <button onclick="window.close()" style="padding: 10px 20px; font-size: 1rem; border-radius: 12px; border: 1px solid rgba(138,43,226,0.3); background: rgba(0,0,0,0.4);"><i class="fa-solid fa-arrow-left"></i> HUB</button>
-                <div class="title-box">
-                    <h1>Sonic Chemical Lab</h1>
+        <div class="top-hud">
+            <a href="index.html" class="btn-home"><i class="fa-solid fa-house"></i></a>
+            <div class="glass-card">
+                <div class="stat">
+                    <div class="stat-label">Lab Score</div>
+                    <div class="stat-value" id="score">0</div>
+                </div>
+                <div class="stat">
+                    <div class="stat-label">Synthesis Time</div>
+                    <div class="stat-value" id="timer">60</div>
                 </div>
             </div>
-            <div class="stats-box">
-                <div>Score: <span id="scoreVal">0</span></div>
-                <div style="color: #fb7185;">Time: <span id="timeVal">60</span>s</div>
-            </div>
+            <div style="width: 60px;"></div>
         </div>
 
-        <div class="legend-box">
-            <h3>Speak Any Combinations:</h3>
-            <ul>
-                <li>"Hydrogen and Chlorine" (HCl)</li>
-                <li>"Nitrogen and Hydrogen" (NH3)</li>
-                <li>"Nitrogen and Oxygen" (NO)</li>
-                <li>Or literally any two parts: "Sodium and Oxygen"</li>
-                <li>Or simply: "Ammonia", "Water", "Salt", "Cyanide"</li>
-            </ul>
-            <div class="mic-status" id="micStatus">Microphone inactive.</div>
+        <div id="feedback">SUCCESS!</div>
+
+        <div class="voice-box">
+            <div class="mic-dot"></div>
+            <div id="voiceTranscript">AI LISTENING...</div>
         </div>
-
-        <div class="feedback-text" id="compoundFeedback">NaCl Formed!</div>
     </div>
 
-    <!-- Intro Screen -->
-    <div class="screen" id="startScreen">
-        <h1>Sonic Chemical Lab</h1>
-        <div class="instructions">
-            <p>Welcome to the Blind-Accessible Voice-Activated Chemistry Simulator.</p>
-            <ul>
-                <li>The AI Quiz Master will ask you questions out loud!</li>
-                <li>Wait for the question: <span>"What is the combination of Carbon and Oxygen?"</span></li>
-                <li>Say the name of a compound <span>(e.g., "Water" or "Salt")</span> loudly and clearly.</li>
-                <li>Or explicitly combine elements by saying <span>"Carbon and Oxygen"</span>.</li>
-                <li>The AI will grab the matching scattered elements and aggressively smash them together!</li>
-                <li>Match as many equations as possible in 60 seconds.</li>
-                <br>
-                <small>* Requires Chrome Voice Recognition API</small>
-            </ul>
-        </div>
-        <button id="startBtn">Allow Mic & Start Synthesizing</button>
+    <div id="startScreen">
+        <h1 style="font-size:4rem; font-weight:900; color:var(--primary);">SONIC CHEMICAL LAB</h1>
+        <p style="max-width:550px; font-size:1.2rem; opacity:0.8; margin-top:20px;">
+            The AI Master will ask for chemical combinations. 
+            <span style="color:var(--accent)">Speak your answer loud and clear.</span> 
+            Combine elements to synthesize points!
+        </p>
+        <button class="btn-primary" onclick="initGame()">INITIATE REACTOR</button>
     </div>
 
-    <!-- Game Over Screen -->
-    <div class="screen" id="gameOverScreen" style="display: none;">
-        <h1>Time's Up!</h1>
-        <h2 style="font-size: 3rem; margin-bottom: 30px;">Final Score: <span id="finalScoreVal">0</span></h2>
-        <button id="retryBtn">Play Again</button>
-    </div>
-
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
     <script>
-        // --- 3JS Background Logic ---
-        const bgCanvas = document.getElementById('bgCanvas');
-        const bgRenderer = new THREE.WebGLRenderer({ canvas: bgCanvas, antialias: true });
-        bgRenderer.setPixelRatio(window.devicePixelRatio);
-        bgRenderer.setSize(window.innerWidth, window.innerHeight);
-        bgRenderer.setClearColor(0xffffff, 1);
-
-        const bgScene = new THREE.Scene();
-        bgScene.fog = new THREE.FogExp2(0xffffff, 0.002);
-
-        const bgCamera = new THREE.PerspectiveCamera(60, window.innerWidth / window.innerHeight, 1, 1000);
-        bgCamera.position.z = 200;
-
-        const bgGeometry = new THREE.IcosahedronGeometry(2, 0);
-        const bgMaterial = new THREE.MeshBasicMaterial({ color: 0xe2e8f0, wireframe: true });
-
-        const bgGroup = new THREE.Group();
-        for (let i = 0; i < 200; i++) {
-            const mesh = new THREE.Mesh(bgGeometry, bgMaterial);
-            mesh.position.x = (Math.random() - 0.5) * 800;
-            mesh.position.y = (Math.random() - 0.5) * 800;
-            mesh.position.z = (Math.random() - 0.5) * 800;
-            mesh.rotation.x = Math.random() * 2 * Math.PI;
-            mesh.rotation.y = Math.random() * 2 * Math.PI;
-            bgGroup.add(mesh);
+        // --- 3JS BG ---
+        function init3DBG() {
+            const renderer = new THREE.WebGLRenderer({ canvas: document.getElementById('bgCanvas'), antialias: true, alpha: true });
+            renderer.setSize(window.innerWidth, window.innerHeight);
+            const scene = new THREE.Scene();
+            const camera = new THREE.PerspectiveCamera(75, window.innerWidth/window.innerHeight, 0.1, 1000);
+            camera.position.z = 400;
+            const group = new THREE.Group();
+            const geo = new THREE.TorusGeometry(10, 3, 16, 100);
+            for(let i=0; i<60; i++) {
+                const mat = new THREE.MeshBasicMaterial({ color: 0xfb7185, wireframe: true, transparent: true, opacity: 0.2 });
+                const mesh = new THREE.Mesh(geo, mat);
+                mesh.position.set((Math.random()-0.5)*1000, (Math.random()-0.5)*1000, (Math.random()-0.5)*1000);
+                mesh.rotation.set(Math.random()*Math.PI, Math.random()*Math.PI, 0);
+                group.add(mesh);
+            }
+            scene.add(group);
+            function anim() { requestAnimationFrame(anim); group.rotation.y += 0.001; renderer.render(scene, camera); }
+            anim();
         }
-        bgScene.add(bgGroup);
+        init3DBG();
 
-        function animateBg() {
-            requestAnimationFrame(animateBg);
-            bgGroup.rotation.x += 0.0005;
-            bgGroup.rotation.y += 0.001;
-            bgRenderer.render(bgScene, bgCamera);
-        }
-        animateBg();
+        // --- Core Physics ---
+        const Engine = Matter.Engine,
+              Bodies = Matter.Bodies,
+              Composite = Matter.Composite,
+              Body = Matter.Body;
 
-        // --- Game Setup & Chemistry Data ---
-        const elementsData = {
-            'Na': { color: '#fb923c', glow: '#fdba74', size: 40 },
-            'Cl': { color: '#4ade80', glow: '#86efac', size: 45 },
-            'H': { color: '#94a3b8', glow: '#cbd5e1', size: 25 },
-            'O': { color: '#60a5fa', glow: '#93c5fd', size: 35 },
-            'C': { color: '#52525b', glow: '#a1a1aa', size: 40 },
-            'Mg': { color: '#e879f9', glow: '#f0abfc', size: 42 },
-            'N': { color: '#a78bfa', glow: '#c4b5fd', size: 35 },
-            'S': { color: '#facc15', glow: '#fde047', size: 42 },
-            'Ca': { color: '#9ca3af', glow: '#d1d5db', size: 45 },
-            'K': { color: '#c084fc', glow: '#e879f9', size: 45 }
+        const engine = Engine.create();
+        engine.world.gravity.y = 0;
+
+        const canvas = document.getElementById('gameCanvas');
+        const ctx = canvas.getContext('2d');
+        canvas.width = window.innerWidth;
+        canvas.height = window.innerHeight;
+
+        const wallOpt = { isStatic: true, friction: 0, restitution: 1.0 };
+        Composite.add(engine.world, [
+            Bodies.rectangle(canvas.width/2, -50, canvas.width, 100, wallOpt),
+            Bodies.rectangle(canvas.width/2, canvas.height+50, canvas.width, 100, wallOpt),
+            Bodies.rectangle(-50, canvas.height/2, 100, canvas.height, wallOpt),
+            Bodies.rectangle(canvas.width+50, canvas.height/2, 100, canvas.height, wallOpt)
+        ]);
+
+        let atoms = [];
+        let score = 0;
+        let active = false;
+        let timeLeft = 60;
+        let currentChallenge = null;
+
+        const ELEMENTS = {
+            'H': { color: '#94a3b8', name: 'Hydrogen' },
+            'O': { color: '#60a5fa', name: 'Oxygen' },
+            'Na': { color: '#fb923c', name: 'Sodium' },
+            'Cl': { color: '#4ade80', name: 'Chlorine' },
+            'C': { color: '#52525b', name: 'Carbon' }
         };
 
-        const compounds = [
-            { name: 'NaCl (Sodium Chloride)', formula: ['Na', 'Cl'], aliases: ['salt', 'sodium chloride', 'nacl'], color: '#86efac' },
-            { name: 'H2O (Water)', formula: ['H', 'O'], aliases: ['water', 'h2o', 'h 2 o'], color: '#93c5fd' },
-            { name: 'CO (Carbon Monoxide)', formula: ['C', 'O'], aliases: ['carbon monoxide', 'carbon oxide', 'co', 'c o'], color: '#a1a1aa' },
-            { name: 'MgO (Magnesium Oxide)', formula: ['Mg', 'O'], aliases: ['magnesium oxide', 'mgo'], color: '#f0abfc' },
-            { name: 'CH4 (Methane)', formula: ['C', 'H'], aliases: ['methane', 'c h 4', 'ch4'], color: '#fdba74' },
-            { name: 'O2 (Oxygen Gas)', formula: ['O', 'O'], aliases: ['oxygen gas', 'o2', 'o two'], color: '#93c5fd' },
-            { name: 'H2 (Hydrogen Gas)', formula: ['H', 'H'], aliases: ['hydrogen gas', 'h2', 'h two'], color: '#cbd5e1' },
-            { name: 'Cl2 (Chlorine Gas)', formula: ['Cl', 'Cl'], aliases: ['chlorine gas', 'cl2', 'c l two'], color: '#86efac' },
-            { name: 'HCl (Hydrochloric Acid)', formula: ['H', 'Cl'], aliases: ['hydrochloric acid', 'hydrogen chloride', 'hcl'], color: '#bef264' },
-            { name: 'NH3 (Ammonia)', formula: ['N', 'H'], aliases: ['ammonia', 'n h 3', 'nh3'], color: '#c4b5fd' },
-            { name: 'NO (Nitric Oxide)', formula: ['N', 'O'], aliases: ['nitric oxide', 'nitrogen oxide', 'n o', 'no'], color: '#a78bfa' },
-            { name: 'SO2 (Sulfur Dioxide)', formula: ['S', 'O'], aliases: ['sulfur dioxide', 's o 2', 'so2'], color: '#fde047' },
-            { name: 'H2S (Hydrogen Sulfide)', formula: ['H', 'S'], aliases: ['hydrogen sulfide', 'h 2 s', 'h2s'], color: '#fef08a' },
-            { name: 'KCl (Potassium Chloride)', formula: ['K', 'Cl'], aliases: ['potassium chloride', 'kcl', 'k c l'], color: '#e879f9' },
-            { name: 'CaO (Calcium Oxide)', formula: ['Ca', 'O'], aliases: ['calcium oxide', 'quicklime', 'cao', 'c a o'], color: '#d1d5db' },
-            { name: 'MgCl2 (Magnesium Chloride)', formula: ['Mg', 'Cl'], aliases: ['magnesium chloride', 'mgcl2'], color: '#f0abfc' },
-            { name: 'CaCl2 (Calcium Chloride)', formula: ['Ca', 'Cl'], aliases: ['calcium chloride', 'cacl2'], color: '#d1d5db' },
-            { name: 'Na2O (Sodium Oxide)', formula: ['Na', 'O'], aliases: ['sodium oxide', 'na2o'], color: '#fdba74' },
-            { name: 'N2 (Nitrogen Gas)', formula: ['N', 'N'], aliases: ['nitrogen gas', 'n2', 'n two'], color: '#c4b5fd' },
-            { name: 'K2O (Potassium Oxide)', formula: ['K', 'O'], aliases: ['potassium oxide', 'k2o'], color: '#c084fc' },
-            { name: 'CS2 (Carbon Disulfide)', formula: ['C', 'S'], aliases: ['carbon disulfide', 'cs2'], color: '#facc15' },
-            { name: 'CN (Cyanide)', formula: ['C', 'N'], aliases: ['cyanide', 'carbon nitride', 'c n', 'cn'], color: '#a1a1aa' }
+        const COMPOUNDS = [
+            { req: ['H', 'O'], ans: ['water', 'h2o'], label: 'H₂O' },
+            { req: ['Na', 'Cl'], ans: ['salt', 'sodium chloride', 'nacl'], label: 'NaCl' },
+            { req: ['C', 'O'], ans: ['carbon monoxide', 'co'], label: 'CO' }
         ];
 
-        const elementDict = {
-            'sodium': 'Na', 'na': 'Na', 'n.a.': 'Na', 'n a': 'Na',
-            'chlorine': 'Cl', 'cl': 'Cl', 'c.l.': 'Cl', 'c l': 'Cl',
-            'hydrogen': 'H', 'h': 'H',
-            'oxygen': 'O', 'o': 'O',
-            'carbon': 'C', 'c': 'C',
-            'magnesium': 'Mg', 'mg': 'Mg', 'm.g.': 'Mg', 'm g': 'Mg',
-            'nitrogen': 'N', 'n': 'N',
-            'sulfur': 'S', 's': 'S',
-            'calcium': 'Ca', 'ca': 'Ca',
-            'potassium': 'K', 'k': 'K'
-        };
-
-        const elementNames = {
-            'Na': 'Sodium', 'Cl': 'Chlorine', 'H': 'Hydrogen', 'O': 'Oxygen',
-            'C': 'Carbon', 'Mg': 'Magnesium', 'N': 'Nitrogen', 'S': 'Sulfur',
-            'Ca': 'Calcium', 'K': 'Potassium'
-        };
-
-        let score = 0;
-        let timeLeft = 60;
-        let gameActive = false;
-        let timerInterval;
-
-        // --- Audio Context & Synth Sounds ---
-        let audioCtx;
-        function initAudio() {
-            if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-            if (audioCtx.state === 'suspended') audioCtx.resume();
+        function initGame() {
+            document.getElementById('startScreen').style.display = 'none';
+            active = true;
+            spawnAtoms();
+            askQuestion();
+            startTimer();
+            initSpeech();
+            loop();
         }
 
-        function playTickSound() {
-            if (!audioCtx) return;
-            const osc = audioCtx.createOscillator();
-            const gain = audioCtx.createGain();
-            osc.connect(gain);
-            gain.connect(audioCtx.destination);
-            osc.type = 'sine';
-            osc.frequency.setValueAtTime(1000, audioCtx.currentTime);
-            gain.gain.setValueAtTime(0.05, audioCtx.currentTime);
-            gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 0.05);
-            osc.start(); osc.stop(audioCtx.currentTime + 0.05);
+        function spawnAtoms() {
+            Object.keys(ELEMENTS).forEach(type => {
+                for(let i=0; i<3; i++) {
+                    const body = Bodies.circle(Math.random()*canvas.width, Math.random()*canvas.height, 40, { restitution: 1, frictionAir: 0.01 });
+                    atoms.push({ body, type, ...ELEMENTS[type], bound: false });
+                    Composite.add(engine.world, body);
+                    Body.setVelocity(body, { x: (Math.random()-0.5)*5, y: (Math.random()-0.5)*5 });
+                }
+            });
         }
 
-        function playRecognizedSound() {
-            if (!audioCtx) return;
-            const osc = audioCtx.createOscillator();
-            const gain = audioCtx.createGain();
-            osc.connect(gain);
-            gain.connect(audioCtx.destination);
-            osc.type = 'triangle';
-            osc.frequency.setValueAtTime(600, audioCtx.currentTime);
-            osc.frequency.exponentialRampToValueAtTime(1200, audioCtx.currentTime + 0.2);
-            gain.gain.setValueAtTime(0.1, audioCtx.currentTime);
-            gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 0.2);
-            osc.start(); osc.stop(audioCtx.currentTime + 0.2);
+        function askQuestion() {
+            currentChallenge = COMPOUNDS[Math.floor(Math.random()*COMPOUNDS.length)];
+            const text = `What is the combination of ${ELEMENTS[currentChallenge.req[0]].name} and ${ELEMENTS[currentChallenge.req[1]].name}?`;
+            speak(text);
+            document.getElementById('voiceTranscript').innerText = `TARGET: ${currentChallenge.label} ?`;
         }
 
-        function playBlastSound() {
-            if (!audioCtx) return;
-            const osc = audioCtx.createOscillator();
-            const gain = audioCtx.createGain();
-            osc.connect(gain);
-            gain.connect(audioCtx.destination);
-            osc.type = 'square';
-            osc.frequency.setValueAtTime(150, audioCtx.currentTime);
-            osc.frequency.exponentialRampToValueAtTime(40, audioCtx.currentTime + 0.5);
-            gain.gain.setValueAtTime(0.2, audioCtx.currentTime);
-            gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 0.5);
-            osc.start(); osc.stop(audioCtx.currentTime + 0.5);
+        function loop() {
+            if(!active) return;
+            Engine.update(engine);
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+            atoms.forEach(a => {
+                const { x, y } = a.body.position;
+                ctx.beginPath();
+                ctx.arc(x, y, 40, 0, Math.PI*2);
+                ctx.fillStyle = a.color;
+                ctx.fill();
+                ctx.strokeStyle = 'white';
+                ctx.lineWidth = 2;
+                ctx.stroke();
+                
+                ctx.fillStyle = 'white';
+                ctx.font = 'bold 24px Outfit';
+                ctx.textAlign = 'center';
+                ctx.textBaseline = 'middle';
+                ctx.fillText(a.type, x, y);
+            });
+
+            requestAnimationFrame(loop);
         }
 
-        function playErrorSound() {
-            if (!audioCtx) return;
-            const osc = audioCtx.createOscillator();
-            const gain = audioCtx.createGain();
-            osc.connect(gain);
-            gain.connect(audioCtx.destination);
-            osc.type = 'sawtooth';
-            osc.frequency.setValueAtTime(100, audioCtx.currentTime);
-            osc.frequency.exponentialRampToValueAtTime(80, audioCtx.currentTime + 0.3);
-            gain.gain.setValueAtTime(0.1, audioCtx.currentTime);
-            gain.gain.linearRampToValueAtTime(0.001, audioCtx.currentTime + 0.3);
-            osc.start(); osc.stop(audioCtx.currentTime + 0.3);
-        }
-
-        function playGameOverSound() {
-            if (!audioCtx) return;
-            const osc = audioCtx.createOscillator();
-            const gain = audioCtx.createGain();
-            osc.connect(gain);
-            gain.connect(audioCtx.destination);
-            osc.type = 'sawtooth';
-            osc.frequency.setValueAtTime(300, audioCtx.currentTime);
-            osc.frequency.exponentialRampToValueAtTime(50, audioCtx.currentTime + 1.0);
-            gain.gain.setValueAtTime(0.2, audioCtx.currentTime);
-            gain.gain.linearRampToValueAtTime(0.001, audioCtx.currentTime + 1.0);
-            osc.start(); osc.stop(audioCtx.currentTime + 1.0);
-        }
-
-        // --- Text to Speech (TTS) ---
-        let ttsOnEndFallback;
-        function speak(text, callback) {
-            if (!('speechSynthesis' in window)) {
-                if (callback) callback();
-                return;
+        function handleSpeech(transcript) {
+            if(!currentChallenge) return;
+            const isMatch = currentChallenge.ans.some(a => transcript.includes(a));
+            if(isMatch) {
+                score += 500;
+                document.getElementById('score').innerText = score;
+                showFeedback("SYNTHESIZED!", "#fb7185");
+                currentChallenge = null;
+                setTimeout(askQuestion, 2000);
+                syncPoints(500);
             }
-            window.speechSynthesis.cancel();
-            clearTimeout(ttsOnEndFallback);
+        }
 
-            let msg = new SpeechSynthesisUtterance(text);
-            msg.rate = (window.innerWidth < 1024) ? 1.2 : 1.0; // Slightly faster for mobile users
-            msg.pitch = 1.0;
-
-            if (callback) {
-                msg.onend = () => { clearTimeout(ttsOnEndFallback); callback(); };
-                // Fallback timeout in case onend never fires (common browser bug)
-                ttsOnEndFallback = setTimeout(() => { callback(); }, 5000 + text.length * 50);
-            }
+        function speak(text) {
+            const msg = new SpeechSynthesisUtterance(text);
             window.speechSynthesis.speak(msg);
         }
 
-        let remainingChallenges = [];
-        let currentChallenge = null;
-        function askQuestion() {
-            if (!gameActive) return;
-            if (remainingChallenges.length === 0) {
-                remainingChallenges = [...compounds].sort(() => Math.random() - 0.5);
-            }
-            currentChallenge = remainingChallenges.pop();
-            let e1 = elementNames[currentChallenge.formula[0]];
-            let e2 = elementNames[currentChallenge.formula[1]];
-
-            // Ensure they are visible in the tank!
-            spawnAtom(currentChallenge.formula[0]);
-            spawnAtom(currentChallenge.formula[1]);
-
-            speak(`What is the combination of ${e1} and ${e2}?`);
-            document.getElementById('micStatus').innerText = `Challenge: ${e1} + ${e2} ?`;
-        }
-
-        // --- Speech Recognition ---
-        let recognition;
         function initSpeech() {
-            window.SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
-            if (!window.SpeechRecognition) {
-                document.getElementById('micStatus').innerText = "Speech API Not Supported (Try Chrome)";
-                return;
-            }
-
-            if (recognition) { try { recognition.stop(); } catch(e){} }
-            
-            recognition = new SpeechRecognition();
-            recognition.continuous = true;
-            recognition.interimResults = (window.innerWidth < 1024) ? false : true; // Interim results off for mobile performance
-            recognition.lang = 'en-US';
-
-            recognition.onstart = () => {
-                document.getElementById('micStatus').innerText = "Listening...";
-                document.getElementById('micStatus').style.color = "#fb7185";
+            const Recognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+            if(!Recognition) return;
+            const rec = new Recognition();
+            rec.continuous = true;
+            rec.onresult = (e) => {
+                const transcript = e.results[e.results.length-1][0].transcript.toLowerCase();
+                document.getElementById('voiceTranscript').innerText = `HEARD: "${transcript}"`;
+                handleSpeech(transcript);
             };
-
-            recognition.onresult = (event) => {
-                if (!gameActive) return;
-                let transcript = event.results[event.results.length - 1][0].transcript.toLowerCase();
-
-                document.getElementById('micStatus').innerText = `Heard: "${transcript}"`;
-                document.getElementById('micStatus').style.color = "#fff";
-
-                setTimeout(() => {
-                    if (gameActive) {
-                        document.getElementById('micStatus').innerText = "Listening...";
-                        document.getElementById('micStatus').style.color = "#fb7185";
-                    }
-                }, 2000);
-
-                checkEquation(transcript);
-            };
-
-            recognition.onerror = (e) => {
-                console.error("Speech Error:", e.error);
-                if (e.error === 'not-allowed') {
-                    document.getElementById('micStatus').innerText = "Mic Access Denied!";
-                }
-            };
-
-            recognition.onend = () => {
-                // Auto-restart if game is active
-                if (gameActive) {
-                    try { recognition.start(); } catch (e) { }
-                }
-            };
-
-            recognition.start();
+            rec.start();
         }
 
-        function checkEquation(transcript) {
-            if (currentChallenge) {
-                // Audio Quiz Master Mode
-                let isCorrect = currentChallenge.aliases.some(a => transcript.includes(a));
-                if (isCorrect) {
-                    let e1Type = currentChallenge.formula[0];
-                    let e2Type = currentChallenge.formula[1];
-
-                    let avail1 = atoms.filter(a => a.type === e1Type && !a.bound);
-                    let avail2 = atoms.filter(a => a.type === e2Type && !a.bound && a !== avail1[0]);
-
-                    if (avail1.length >= 1 && avail2.length >= 1) {
-                        coupleAtoms(avail1[0], avail2[0], currentChallenge);
-                    }
-
-                    speak(`Correct answer.`);
-
-                    currentChallenge = null;
-
-                    setTimeout(() => {
-                        if (gameActive) askQuestion();
-                    }, 2000);
-                    return;
-                } else if (transcript.trim().length > 0) {
-                    playErrorSound();
-                    speak(`Wrong answer.`);
-                    return;
+        function startTimer() {
+            const int = setInterval(() => {
+                if(!active) { clearInterval(int); return; }
+                timeLeft--;
+                document.getElementById('timer').innerText = timeLeft;
+                if(timeLeft <= 0) {
+                    active = false;
+                    alert("Reactor Stable. Final Score: " + score);
+                    location.reload();
                 }
-            }
+            }, 1000);
+        }
 
-            // Fallback: the classic open sandbox mode
-            let matchedCompound = compounds.find(c => c.aliases.some(a => transcript.includes(a)));
-            let atom1Type, atom2Type;
+        function showFeedback(txt, col) {
+            const f = document.getElementById('feedback');
+            f.innerText = txt; f.style.color = col;
+            gsap.fromTo(f, { scale: 0, opacity: 0 }, { scale: 1.2, opacity: 1, duration: 0.5, yoyo: true, repeat: 1 });
+        }
 
-            if (matchedCompound) {
-                atom1Type = matchedCompound.formula[0];
-                atom2Type = matchedCompound.formula[1];
-            } else {
-                // If they didn't say a direct alias, parse individual elements spoken
-                let transcriptWords = transcript.replace(/[.,]/g, '').split(/\s+/);
-                let spokenElements = [];
-                let i = 0;
-                while (i < transcriptWords.length) {
-                    let w1 = transcriptWords[i];
-                    let w2 = transcriptWords[i + 1];
-                    let twoWord = w2 ? w1 + ' ' + w2 : '';
-                    if (elementDict[twoWord]) {
-                        spokenElements.push(elementDict[twoWord]);
-                        i += 2;
-                    } else if (elementDict[w1]) {
-                        spokenElements.push(elementDict[w1]);
-                        i += 1;
-                    } else {
-                        i += 1;
-                    }
-                }
-
-                if (spokenElements.length >= 2) {
-                    atom1Type = spokenElements[0];
-                    atom2Type = spokenElements[1];
-
-                    // Check if it matches a predefined compound
-                    for (let c of compounds) {
-                        if ((c.formula[0] === atom1Type && c.formula[1] === atom2Type) || (c.formula[0] === atom2Type && c.formula[1] === atom1Type)) {
-                            matchedCompound = c;
-                            break;
-                        }
-                    }
-
-                    // If it doesn't match a known compound, create a totally custom synthetic bond!
-                    if (!matchedCompound) {
-                        matchedCompound = {
-                            name: `${atom1Type}${atom2Type} (Custom Bond)`,
-                            formula: [atom1Type, atom2Type],
-                            color: '#fbbf24' // Yellow/Gold for experimental bonds
-                        };
-                    }
-                }
-            }
-
-            if (!matchedCompound) return; // Ignore words that don't match any elements or aliases
-
-            // Get unbound free atoms of requested types
-            let avail1 = atoms.filter(a => a.type === atom1Type && !a.bound);
-            // Ensure avail2 doesn't accidentally pick the exact same atom object if atom1Type == atom2Type
-            let avail2 = atoms.filter(a => a.type === atom2Type && !a.bound && a !== avail1[0]);
-
-            if (avail1.length >= 1 && avail2.length >= 1) {
-                // We have enough elements!
-                coupleAtoms(avail1[0], avail2[0], matchedCompound);
-            } else {
-                playErrorSound();
-                document.getElementById('micStatus').innerText = `Need more ${atom1Type} & ${atom2Type}!`;
+        function syncPoints(pts) {
+            const uid = localStorage.getItem('qrio_active_id');
+            if (uid) {
+                fetch('/api/points', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ userId: uid, pointsToAdd: pts })
+                }).catch(e => console.error(e));
             }
         }
 
-        // --- Physics & Interactions ---
-        const canvas = document.getElementById('gameCanvas');
-        const ctx = canvas.getContext('2d');
-        let width = window.innerWidth;
-        let height = window.innerHeight;
-        canvas.width = width;
-        canvas.height = height;
-
-        window.addEventListener('resize', () => {
-            width = window.innerWidth;
-            height = window.innerHeight;
-            canvas.width = width;
-            canvas.height = height;
-
-            // Update 3js
-            bgCamera.aspect = width / height;
-            bgCamera.updateProjectionMatrix();
-            bgRenderer.setSize(width, height);
-
-            Matter.Body.setPosition(ground, { x: width / 2, y: height + 50 });
-            Matter.Body.setPosition(leftWall, { x: -50, y: height / 2 });
-            Matter.Body.setPosition(rightWall, { x: width + 50, y: height / 2 });
-            Matter.Body.setPosition(ceiling, { x: width / 2, y: -50 });
+        // --- Global Theme Sync ---
+        window.addEventListener('load', () => {
+            const savedTheme = localStorage.getItem('qrio-theme') || 'dark';
+            document.documentElement.setAttribute('data-theme', savedTheme);
         });
-
-        const Engine = Matter.Engine,
-            Runner = Matter.Runner,
-            Bodies = Matter.Bodies,
-            Composite = Matter.Composite,
-            Body = Matter.Body,
-            Events = Matter.Events;
-
-        const engine = Engine.create();
-        engine.world.gravity.y = 0; // ZERO GRAVITY globally
-        engine.world.gravity.x = 0;
-
-        const wallOpt = { isStatic: true, friction: 0, restitution: 1.0, render: { visible: false } };
-        let ground = Bodies.rectangle(width / 2, height + 50, width, 100, wallOpt);
-        let leftWall = Bodies.rectangle(-50, height / 2, 100, height, wallOpt);
-        let rightWall = Bodies.rectangle(width + 50, height / 2, 100, height, wallOpt);
-        let ceiling = Bodies.rectangle(width / 2, -50, width, 100, wallOpt);
-        Composite.add(engine.world, [ground, leftWall, rightWall, ceiling]);
-
-        const runner = Runner.create();
-        Runner.run(runner, engine);
-
-        let atoms = [];
-        let particles = [];
-        let attractingPairs = [];
-
-        function spawnAtom(type) {
-            let data = elementsData[type];
-            let x = Math.random() * (width - 100) + 50;
-            let y = Math.random() * (height - 100) + 50;
-
-            let body = Bodies.circle(x, y, data.size, {
-                restitution: 1.0,
-                friction: 0.0,
-                frictionAir: 0.01,
-                density: 0.002,
-                label: type
-            });
-
-            // Random scatter drift
-            Body.setVelocity(body, {
-                x: (Math.random() - 0.5) * 4,
-                y: (Math.random() - 0.5) * 4
-            });
-
-            let atom = { body: body, type: type, data: data, bound: false, targetGlow: null };
-            Composite.add(engine.world, body);
-            atoms.push(atom);
-        }
-
-        function populateLab() {
-            atoms.forEach(a => Composite.remove(engine.world, a.body));
-            atoms = [];
-            attractingPairs = [];
-
-            // Spawn 3 of each element to ensure chaos without completely lagging the physics engine
-            const elementTypes = Object.keys(elementsData);
-            elementTypes.forEach(type => {
-                for (let i = 0; i < 3; i++) spawnAtom(type);
-            });
-        }
-
-        function coupleAtoms(a1, a2, comp) {
-            a1.bound = true;
-            a2.bound = true;
-            a1.targetGlow = comp.color;
-            a2.targetGlow = comp.color;
-
-            playRecognizedSound();
-            attractingPairs.push({ a1, a2, comp });
-        }
-
-        // Apply magnetic forces before every physics step
-        Events.on(engine, 'beforeUpdate', () => {
-            if (!gameActive) return;
-
-            // Random ambient bumping for unbound atoms so they scatter nicely
-            atoms.forEach(a => {
-                if (!a.bound && Math.random() < 0.02) {
-                    Body.applyForce(a.body, a.body.position, {
-                        x: (Math.random() - 0.5) * 0.0005 * a.body.mass,
-                        y: (Math.random() - 0.5) * 0.0005 * a.body.mass
-                    });
-                }
-            });
-
-            // Extreme magnetic attraction for paired atoms
-            attractingPairs.forEach(pair => {
-                let b1 = pair.a1.body;
-                let b2 = pair.a2.body;
-                let dx = b2.position.x - b1.position.x;
-                let dy = b2.position.y - b1.position.y;
-                let dist = Math.sqrt(dx * dx + dy * dy);
-
-                if (dist > 0) {
-                    let forceMag = 0.015 * b1.mass; // Strong pull
-                    let dirX = dx / dist;
-                    let dirY = dy / dist;
-
-                    Body.applyForce(b1, b1.position, { x: dirX * forceMag, y: dirY * forceMag });
-                    Body.applyForce(b2, b2.position, { x: -dirX * forceMag, y: -dirY * forceMag });
-                }
-            });
-        });
-
-        // Detect successful bonding collisions
-        Events.on(engine, 'collisionStart', (e) => {
-            e.pairs.forEach(p => {
-                let bA = p.bodyA;
-                let bB = p.bodyB;
-
-                let pairIndex = attractingPairs.findIndex(pair =>
-                    (pair.a1.body === bA && pair.a2.body === bB) ||
-                    (pair.a1.body === bB && pair.a2.body === bA)
-                );
-
-                if (pairIndex !== -1) {
-                    let pair = attractingPairs[pairIndex];
-
-                    // Fusion successful!
-                    createBlast(bA.position.x, bA.position.y, pair.comp.color);
-                    flashCompound(pair.comp.name, pair.comp.color);
-                    playBlastSound();
-
-                    score += 10;
-                    document.getElementById('scoreVal').innerText = score;
-
-                    // System-wide QRIO Point Sync
-                    if (window.localStorage) {
-                        let activeId = localStorage.getItem('qrio_active_id');
-                        if (activeId) {
-                            let curr = parseInt(localStorage.getItem('qrio_points_' + activeId)) || 0;
-                            localStorage.setItem('qrio_points_' + activeId, curr + 10);
-                        }
-                    }
-
-                    // Cleanup
-                    Composite.remove(engine.world, [bA, bB]);
-                    atoms = atoms.filter(a => a.body !== bA && a.body !== bB);
-                    attractingPairs.splice(pairIndex, 1);
-
-                    // Replenish the consumed atoms after a short delay
-                    setTimeout(() => {
-                        if (gameActive) {
-                            spawnAtom(pair.a1.type);
-                            spawnAtom(pair.a2.type);
-                        }
-                    }, 1500);
-                }
-            });
-        });
-
-        // --- Visual Effects Rendering ---
-        function createBlast(x, y, color) {
-            for (let i = 0; i < 50; i++) {
-                particles.push({
-                    x: x, y: y,
-                    vx: (Math.random() - 0.5) * 40,
-                    vy: (Math.random() - 0.5) * 40,
-                    life: 1.0,
-                    color: color,
-                    size: Math.random() * 20 + 5
-                });
-            }
-        }
-
-        function flashCompound(compName, color) {
-            const el = document.getElementById('compoundFeedback');
-            el.innerText = compName;
-            el.style.color = color;
-            el.style.textShadow = `0 0 50px ${color}`;
-            el.classList.add('show');
-            setTimeout(() => el.classList.remove('show'), 1200);
-        }
-
-        function renderLoop() {
-            ctx.clearRect(0, 0, width, height);
-
-            // Particles
-            ctx.globalCompositeOperation = 'screen';
-            for (let i = particles.length - 1; i >= 0; i--) {
-                let p = particles[i];
-                p.x += p.vx;
-                p.y += p.vy;
-                p.life -= 0.02;
-
-                if (p.life <= 0) {
-                    particles.splice(i, 1);
-                } else {
-                    ctx.globalAlpha = p.life;
-                    ctx.beginPath();
-                    ctx.arc(p.x, p.y, p.size * p.life, 0, Math.PI * 2);
-                    ctx.fillStyle = p.color;
-                    ctx.fill();
-                }
-            }
-            ctx.globalCompositeOperation = 'source-over';
-            ctx.globalAlpha = 1.0;
-
-            // Atoms
-            atoms.forEach(atom => {
-                let pos = atom.body.position;
-                let r = atom.data.size;
-
-                ctx.save();
-                ctx.translate(pos.x, pos.y);
-
-                // Active Voice Bonding Glow vs Ambient Glow
-                ctx.shadowColor = atom.bound ? atom.targetGlow : atom.data.glow;
-                ctx.shadowBlur = atom.bound ? 40 : 15;
-
-                // Sphere Gradient
-                ctx.beginPath();
-                ctx.arc(0, 0, r, 0, 2 * Math.PI);
-                let grd = ctx.createRadialGradient(0, 0, 0, 0, 0, r);
-                grd.addColorStop(0, '#ffffff');
-                grd.addColorStop(0.3, atom.data.color);
-                grd.addColorStop(1, '#000000');
-
-                ctx.fillStyle = grd;
-                ctx.fill();
-
-                // Bonding outline
-                ctx.lineWidth = atom.bound ? 5 : 2;
-                ctx.strokeStyle = atom.bound ? 'white' : `rgba(255,255,255,0.3)`;
-                ctx.stroke();
-                ctx.shadowBlur = 0;
-
-                // Text Name
-                ctx.fillStyle = 'white';
-                ctx.font = `bold ${r * 0.8}px Quicksand`;
-                ctx.textAlign = 'center';
-                ctx.textBaseline = 'middle';
-                ctx.fillText(atom.type, 0, 0);
-
-                ctx.restore();
-            });
-
-            requestAnimationFrame(renderLoop);
-        }
-
-        // --- Game Flow ---
-        function startGame() {
-            initAudio();
-            initSpeech();
-
-            document.getElementById('startScreen').style.display = 'none';
-            document.getElementById('gameOverScreen').style.display = 'none';
-
-            score = 0;
-            timeLeft = 60;
-            gameActive = true;
-
-            document.getElementById('scoreVal').innerText = score;
-            document.getElementById('timeVal').innerText = timeLeft;
-            document.getElementById('timeVal').style.color = '#fb7185';
-
-            populateLab();
-            clearInterval(timerInterval);
-
-            // Intro Audio Sequence before starting timer
-            speak('Welcome to the Sonic Chemical Lab audio edition. What does the combination of the given elements make?', () => {
-                if (!gameActive) return;
-                askQuestion();
-
-                timerInterval = setInterval(() => {
-                    if (!gameActive) return;
-                    timeLeft--;
-                    document.getElementById('timeVal').innerText = timeLeft;
-                    playTickSound();
-
-                    if (timeLeft <= 0) {
-                        endGame();
-                    }
-                }, 1000);
-            });
-        }
-
-        function endGame() {
-            gameActive = false;
-            clearInterval(timerInterval);
-            if (recognition) { try { recognition.stop(); } catch (e) { } }
-
-            playGameOverSound();
-            speak(`Game over! Your final score is ${score}.`);
-
-            document.getElementById('micStatus').innerText = "Game Over!";
-            document.getElementById('finalScoreVal').innerText = score;
-            document.getElementById('gameOverScreen').style.display = 'flex';
-        }
-
-        document.getElementById('startBtn').addEventListener('click', startGame);
-        document.getElementById('retryBtn').addEventListener('click', startGame);
-
-        requestAnimationFrame(renderLoop);
-
     </script>
 </body>
-
 </html>

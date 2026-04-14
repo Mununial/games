@@ -7,45 +7,43 @@
     <title>Indian Culture Game Zone</title>
     <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;700;900&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-
+    <link rel="stylesheet" href="doodle.css">
     <style>
-        :root {
-            --primary: #ea580c;
-            --primary-hover: #c2410c;
-            --bg: #fff7ed;
-            --card-bg: #ffffff;
-            --text: #431407;
-            --muted: #9a3412;
-        }
-
         body {
             margin: 0;
-            background: var(--bg);
-            color: var(--text);
-            font-family: 'Outfit', sans-serif;
-            overflow-x: hidden;
+            padding: 0;
+            min-height: 100vh;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 40px auto;
+            padding: 0 24px 80px;
+            position: relative;
+            z-index: 10;
         }
 
         nav {
             display: flex;
             justify-content: space-between;
             align-items: center;
-            padding: 20px 40px;
-            background: rgba(255, 255, 255, 0.8);
-            backdrop-filter: blur(10px);
-            border-bottom: 2px solid #ffedd5;
-            position: sticky;
-            top: 0;
-            z-index: 50;
+            padding: 24px 40px;
+            background: var(--card-bg);
+            backdrop-filter: blur(20px);
+            border-bottom: var(--sketch-border);
+            position: sticky; top: 0;
+            z-index: 100;
+            box-shadow: var(--soft-shadow);
         }
 
         .logo {
             font-size: 1.8rem;
-            font-weight: 700;
-            color: var(--primary);
+            font-weight: 900;
+            color: var(--text-main);
             display: flex;
             align-items: center;
-            gap: 10px;
+            gap: 12px;
+            text-shadow: 2px 2px 0 white;
         }
 
         .hud {
@@ -55,144 +53,160 @@
         }
 
         .coin-badge {
-            background: #fef08a;
-            color: #854d0e;
-            padding: 5px 15px;
+            background: white;
+            color: var(--primary);
+            padding: 10px 24px;
             border-radius: 50px;
-            font-weight: bold;
-            font-size: 1.2rem;
+            font-weight: 900;
+            font-size: 1.1rem;
             display: flex;
             align-items: center;
-            gap: 5px;
-            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
+            gap: 10px;
+            border: var(--sketch-border);
+            box-shadow: 4px 4px 0px #334155;
         }
 
         .container {
             max-width: 1200px;
             margin: 40px auto;
-            padding: 0 20px;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
+            padding: 0 24px 80px;
+            animation: fadeIn 0.8s cubic-bezier(0.16, 1, 0.3, 1);
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
         }
 
         .header-section {
             text-align: center;
-            margin-bottom: 40px;
+            margin-bottom: 60px;
         }
 
         .header-section h1 {
-            font-size: 4rem;
-            margin: 0 0 10px 0;
-            color: var(--text);
-            text-shadow: 3px 3px 0px #ffedd5;
+            font-size: clamp(2.5rem, 8vw, 4rem);
+            margin: 0 0 16px 0;
+            font-weight: 900;
+            color: var(--text-main);
+            text-shadow: 3px 3px 0 white;
         }
 
         .header-section p {
-            font-size: 1.5rem;
-            color: var(--muted);
-            margin: 0;
-            max-width: 800px;
+            font-size: 1.25rem;
+            color: var(--text-muted);
+            margin: 0 auto;
+            max-width: 700px;
+            line-height: 1.6;
+            font-weight: 700;
         }
 
         .game-grid {
             display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
-            gap: 30px;
+            grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+            gap: 32px;
             width: 100%;
-            margin-top: 20px;
-            padding-bottom: 50px;
         }
 
         .card {
             background: var(--card-bg);
-            border: 2px solid #fed7aa;
-            border-radius: 20px;
-            padding: 40px 30px;
+            backdrop-filter: blur(24px);
+            border: var(--sketch-border);
+            border-radius: 24px 22px 28px 20px;
+            padding: 48px 32px;
             display: flex;
             flex-direction: column;
             align-items: center;
             text-align: center;
-            cursor: pointer;
-            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-            box-shadow: 0 10px 15px -3px rgba(234, 88, 12, 0.1);
-            position: relative;
-            overflow: hidden;
+            transition: var(--transition);
             text-decoration: none;
             color: inherit;
+            position: relative;
+            box-shadow: 8px 8px 0px rgba(0, 0, 0, 0.05);
         }
 
         .card:hover {
-            transform: translateY(-10px) scale(1.02);
-            box-shadow: 0 20px 25px -5px rgba(234, 88, 12, 0.2);
+            transform: translateY(-12px) rotate(1deg);
             border-color: var(--primary);
         }
 
         .card-icon {
             font-size: 4rem;
-            margin-bottom: 20px;
-            color: var(--primary);
-            background: #ffedd5;
+            margin-bottom: 24px;
             width: 100px;
             height: 100px;
+            background: white;
             border-radius: 50%;
             display: flex;
             align-items: center;
             justify-content: center;
-            transition: 0.3s;
+            transition: var(--transition);
+            color: var(--primary);
+            border: var(--sketch-border);
+            box-shadow: 4px 4px 0px #334155;
         }
 
         .card:hover .card-icon {
+            transform: scale(1.1) rotate(5deg);
             background: var(--primary);
             color: white;
-            transform: rotate(10deg);
         }
 
         .card-title {
-            font-size: 2rem;
-            font-weight: 800;
-            margin: 0 0 10px 0;
-            color: var(--primary-hover);
+            font-size: 1.75rem;
+            font-weight: 900;
+            margin: 0 0 12px 0;
+            color: var(--text-main);
+            text-shadow: 1px 1px 0 white;
         }
 
         .card-sub {
-            font-size: 1.2rem;
-            color: var(--muted);
-            line-height: 1.5;
-            margin-bottom: 25px;
+            font-size: 1rem;
+            color: var(--text-muted);
+            line-height: 1.6;
+            margin-bottom: 32px;
+            flex-grow: 1;
+            font-weight: 700;
         }
 
         .btn-play {
             background: var(--primary);
             color: white;
-            border: none;
-            padding: 12px 30px;
+            border: var(--sketch-border);
+            padding: 16px 32px;
             border-radius: 50px;
-            font-weight: bold;
-            font-family: 'Outfit', sans-serif;
-            cursor: pointer;
-            font-size: 1.2rem;
+            font-weight: 900;
+            font-size: 1rem;
             width: 100%;
-            box-sizing: border-box;
-            transition: 0.2s;
+            transition: var(--transition);
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            box-shadow: 4px 4px 0px #334155;
         }
 
-        .btn-play:hover {
-            background: var(--primary-hover);
-            letter-spacing: 1px;
+        .card:hover .btn-play {
+            background: var(--accent);
+            color: white;
+            transform: scale(1.05);
         }
+
+        @media (max-width: 768px) {
+            nav { padding: 15px 24px; }
+            .header-section h1 { font-size: 2.5rem; }
+            .game-grid { grid-template-columns: 1fr; }
+            .card { padding: 32px 24px; }
+            .logo { font-size: 1.4rem; }
+        }
+
     </style>
 </head>
 
 <body>
 
     <nav>
-        <div class="logo"> Indian Culture Game Zone</div>
+        <div class="logo"><i class="fa-solid fa-masks-theater"></i> Qrio • Culture</div>
         <div class="hud">
             <div class="coin-badge"><i class="fa-solid fa-coins"></i> <span id="coinDisplay">0</span></div>
-            <button onclick="window.close()"
-                style="background:var(--primary); color:white; border:none; padding:10px 20px; border-radius:10px; cursor:pointer; font-weight:bold; font-family:'Outfit'">Back
-                to Qrio</button>
+            <button class="btn-play" onclick="window.close()" style="width: auto; padding: 10px 24px;">Exit to HUB</button>
         </div>
     </nav>
 

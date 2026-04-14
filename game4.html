@@ -1,314 +1,476 @@
 <!DOCTYPE html>
 <html lang="en">
-
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Cyber Security World - SkillVerse</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Cyber Commander - Qrio World</title>
+    <link href="https://fonts.googleapis.com/css2?family=Fira+Code:wght@400;700&family=Outfit:wght@400;700;900&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/gsap.min.js"></script>
+
     <style>
-        @import url('https://fonts.googleapis.com/css2?family=Fira+Code:wght@400;700&family=Inter:wght@400;700;900&display=swap');
-
-        body {
-            margin: 0;
-            background-color: #020617;
-            color: #10b981;
-            font-family: 'Fira Code', monospace;
-            overflow: hidden;
+        :root {
+            --neon-blue: #00f2ff;
+            --neon-pink: #ff00ff;
+            --neon-green: #00ff62;
+            --deep-bg: #030712;
+            --card-glass: rgba(15, 23, 42, 0.85);
+            --border-glass: rgba(0, 242, 255, 0.3);
         }
 
-        #canvas-bg {
-            position: absolute;
+        * {
+            box-sizing: border-box;
+            user-select: none;
+            margin: 0; padding: 0;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        body, html {
+            width: 100%; height: 100%;
+            background: var(--deep-bg);
+            color: #fff;
+            font-family: 'Outfit', sans-serif;
+            overflow-x: hidden;
+            background-image: 
+                radial-gradient(circle at 50% 50%, rgba(0, 98, 255, 0.1) 0%, transparent 50%),
+                radial-gradient(circle at 20% 80%, rgba(255, 0, 255, 0.05) 0%, transparent 30%);
+        }
+
+        /* Tech Background Lines */
+        .grid-bg {
+            position: fixed;
+            inset: 0;
+            background-size: 40px 40px;
+            background-image: 
+                linear-gradient(to right, rgba(0, 242, 255, 0.05) 1px, transparent 1px),
+                linear-gradient(to bottom, rgba(0, 242, 255, 0.05) 1px, transparent 1px);
             z-index: -1;
-            width: 100vw;
-            height: 100vh;
+            mask-image: radial-gradient(circle at center, black, transparent 80%);
         }
 
-        nav {
+        /* Top Bar */
+        .hud-bar {
+            position: fixed;
+            top: 0; left: 0; width: 100%;
+            padding: 15px 25px;
             display: flex;
             justify-content: space-between;
+            align-items: center;
+            background: rgba(0,0,0,0.5);
+            backdrop-filter: blur(10px);
+            border-bottom: 1px solid var(--border-glass);
+            z-index: 100;
+        }
+
+        .hud-logo { font-weight: 900; color: var(--neon-blue); display: flex; align-items: center; gap: 8px; }
+
+        .stats-group { display: flex; gap: 15px; }
+        .stat-tag { background: rgba(255,255,255,0.05); padding: 5px 15px; border-radius: 5px; border: 1px solid var(--border-glass); font-family: 'Fira Code', monospace; font-size: 0.8rem; }
+
+        /* Main Container */
+        main {
+            padding: 100px 20px 40px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            min-height: 100vh;
+        }
+
+        .game-shell {
+            width: 100%;
+            max-width: 600px;
+            background: var(--card-glass);
+            border: 2px solid var(--border-glass);
+            border-radius: 30px;
+            padding: 30px;
+            box-shadow: 0 20px 50px rgba(0,0,0,0.6);
+            position: relative;
+            transform: translateY(0); /* Removed heavy rotate for stability */
+        }
+
+        .screen-title { font-size: 2rem; font-weight: 900; margin-bottom: 10px; text-shadow: 0 0 10px var(--neon-blue); }
+        .screen-sub { opacity: 0.6; font-size: 0.9rem; margin-bottom: 30px; }
+
+        /* Level Grid */
+        .level-grid {
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 15px;
+            width: 100%;
+        }
+
+        .level-item {
+            background: rgba(255,255,255,0.03);
+            border: 1px solid rgba(255,255,255,0.1);
             padding: 20px;
-            color: white;
-            font-family: 'Inter', sans-serif;
-            background: rgba(0, 0, 0, 0.5);
-            backdrop-filter: blur(10px);
-        }
-
-        .hud {
-            position: absolute;
-            top: 100px;
-            right: 20px;
-            text-align: right;
-        }
-
-        .hud h2 {
-            margin: 0;
-            font-size: 2rem;
-            color: #34d399;
-        }
-
-        .container {
-            max-width: 800px;
-            margin: 100px auto;
-            text-align: center;
-            background: rgba(15, 23, 42, 0.8);
-            border: 1px solid #059669;
-            padding: 40px;
-            border-radius: 12px;
-            backdrop-filter: blur(10px);
-            box-shadow: 0 0 40px rgba(16, 185, 129, 0.2);
-        }
-
-        button {
-            background: #10b981;
-            color: #020617;
-            border: none;
-            padding: 15px 30px;
-            font-size: 1.2rem;
+            border-radius: 20px;
+            display: flex;
+            align-items: center;
+            gap: 20px;
             cursor: pointer;
-            border-radius: 8px;
-            font-weight: bold;
-            margin: 10px;
-            font-family: 'Fira Code';
-            transition: transform 0.2s, box-shadow 0.2s;
+            transition: all 0.2s;
+            position: relative;
         }
 
-        button:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 0 20px rgba(16, 185, 129, 0.6);
+        .level-item:hover {
+            background: rgba(0, 242, 255, 0.05);
+            border-color: var(--neon-blue);
+            transform: translateX(5px);
         }
 
-        input {
-            background: #020617;
-            border: 1px solid #10b981;
-            color: #34d399;
+        .level-item.locked {
+            opacity: 0.5;
+            cursor: not-allowed;
+            pointer-events: none;
+        }
+
+        .level-icon {
+            width: 50px; height: 50px;
+            background: rgba(0, 242, 255, 0.1);
+            border-radius: 12px;
+            display: flex; align-items: center; justify-content: center;
+            color: var(--neon-blue);
+            font-size: 1.5rem;
+        }
+
+        .level-text { flex: 1; text-align: left; }
+        .level-text h3 { font-size: 1.1rem; margin-bottom: 2px; }
+        .level-text p { font-size: 0.8rem; opacity: 0.6; }
+
+        .locked-tag { position: absolute; right: 20px; font-size: 0.8rem; color: #ef4444; }
+
+        /* Gameplay Styles */
+        .action-card { display: none; text-align: center; }
+
+        .cyber-input {
+            width: 100%;
+            background: rgba(0,0,0,0.4);
+            border: 2px solid var(--border-glass);
+            border-radius: 15px;
             padding: 15px;
-            font-size: 1.2rem;
-            width: 80%;
-            border-radius: 8px;
-            font-family: 'Fira Code';
+            color: var(--neon-blue);
+            font-family: 'Fira Code', monospace;
+            font-size: 1.1rem;
             margin-bottom: 20px;
             outline: none;
         }
 
-        .phishing-card {
-            background: #1e293b;
-            border-left: 5px solid #ef4444;
-            padding: 20px;
-            margin: 20px 0;
-            text-align: left;
-            color: white;
-            display: none;
-        }
-
-        .phishing-card.active {
-            display: block;
-        }
-
-        .sender {
-            color: #94a3b8;
-            font-size: 0.9em;
-            margin-bottom: 10px;
-        }
-
-        .game-over {
-            position: absolute;
-            top: 0;
-            left: 0;
-            width: 100vw;
-            height: 100vh;
-            background: rgba(2, 6, 23, 0.95);
-            z-index: 100;
-            display: flex;
-            flex-direction: column;
-            justify-content: center;
-            align-items: center;
-            display: none;
-        }
-
-        .game-over h1 {
-            color: #ef4444;
-            font-size: 4rem;
+        .btn-action {
+            width: 100%;
+            padding: 18px;
+            background: linear-gradient(90deg, var(--neon-blue), var(--neon-green));
+            border: none;
+            border-radius: 15px;
+            color: #030712;
+            font-weight: 900;
+            font-size: 1.1rem;
+            cursor: pointer;
             text-transform: uppercase;
-            margin-bottom: 0;
+            box-shadow: 0 5px 15px rgba(0, 242, 255, 0.3);
+            transition: all 0.2s;
         }
 
-        .game-over p {
-            color: #94a3b8;
-            font-size: 1.5rem;
+        .btn-action:active { transform: scale(0.95); }
+
+        .btn-secondary { background: rgba(255,255,255,0.1); color: white; margin-top: 15px; border: 1px solid rgba(255,255,255,0.1); }
+
+        /* Port Game Styles */
+        .port-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 10px;
+            margin: 20px 0;
         }
+        .port {
+            aspect-ratio: 1;
+            background: rgba(255,255,255,0.05);
+            border-radius: 10px;
+            border: 1px solid rgba(255,255,255,0.1);
+            display: flex; align-items: center; justify-content: center;
+            font-size: 1.5rem;
+            cursor: pointer;
+        }
+        .port.vulnerable { background: rgba(239, 68, 68, 0.2); border-color: #ef4444; color: #ef4444; animation: pulse 0.5s infinite alternate; }
+        @keyframes pulse { from { opacity: 0.5; } to { opacity: 1; } }
+
+        /* Result Panel */
+        .result-panel {
+            position: fixed;
+            inset: 0;
+            background: rgba(0,0,0,0.8);
+            backdrop-filter: blur(10px);
+            display: none;
+            z-index: 500;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 40px;
+        }
+
         @media (max-width: 768px) {
-            nav { padding: 15px; flex-direction: column; gap: 10px; align-items: center; text-align: center; }
-            .container { margin: 20px 10px; padding: 25px; width: auto; }
-            .container h1 { font-size: 1.5rem; }
-            .hud { top: auto; bottom: 80px; right: 10px; text-align: center; background: rgba(0,0,0,0.5); padding: 10px; border-radius: 10px; }
-            .hud h2 { font-size: 1.5rem; }
-            input { width: 100%; box-sizing: border-box; }
-            button { width: 100%; margin: 5px 0; }
-            .game-over h1 { font-size: 2.2rem; }
+            .game-shell { padding: 20px; border-radius: 20px; }
+            .screen-title { font-size: 1.5rem; }
+            .hud-bar { padding: 10px 15px; }
+            .stat-tag { padding: 5px 8px; font-size: 0.7rem; }
+            .hud-logo { font-size: 1rem; }
         }
     </style>
 </head>
 
 <body>
-    <nav>
-        <div style="font-weight: 900; font-size: 1.5rem;"><i class="fa-solid fa-cube"></i> SkillVerse • Cyber Security
+    <div class="grid-bg"></div>
+
+    <div class="hud-bar">
+        <div class="hud-logo"><i class="fa-solid fa-shield-halved"></i> COMMANDER</div>
+        <div class="stats-group">
+            <div class="stat-tag"><span style="color:var(--neon-blue)">SCORE:</span> <span id="scoreVal">0</span></div>
+            <div class="stat-tag"><span style="color:var(--neon-pink)">LEVEL:</span> <span id="levelVal">1</span></div>
         </div>
-        <button onclick="window.close()" style="margin:0; padding: 10px 20px; font-size: 1rem;">Back to Hub</button>
-    </nav>
-    <div class="hud">
-        <p>System XP</p>
-        <h2 id="scoreDisplay">0 px</h2>
     </div>
 
-    <div class="container" id="mainMenu">
-        <h1>Welcome to Cyber City Server Interface</h1>
-        <p>Your mission: Secure the mainframe and detect inbound threats.</p>
-        <button onclick="startPassword()">Mission 1: Password Builder</button>
-        <button onclick="startPhishing()">Mission 2: Phishing Detector</button>
-    </div>
+    <main>
+        <div class="game-shell">
+            <!-- Main Level Select -->
+            <div id="screen-main">
+                <h1 class="screen-title">System Defense</h1>
+                <p class="screen-sub">Secure the city by completing all protocols.</p>
+                <div class="level-grid">
+                    <div class="level-item" onclick="startLvl('pass')">
+                        <div class="level-icon"><i class="fa-solid fa-key"></i></div>
+                        <div class="level-text">
+                            <h3>Password Matrix</h3>
+                            <p>Generate secure access keys.</p>
+                        </div>
+                    </div>
+                    <div class="level-item" id="lvl-phish" onclick="startLvl('phish')">
+                        <div class="level-icon"><i class="fa-solid fa-envelope"></i></div>
+                        <div class="level-text">
+                            <h3>Phishing Scan</h3>
+                            <p>Detect social engineering threats.</p>
+                        </div>
+                    </div>
+                    <div class="level-item locked" id="lvl-ports" onclick="startLvl('ports')">
+                        <div class="level-icon"><i class="fa-solid fa-server"></i></div>
+                        <div class="level-text">
+                            <h3>Port Guardian</h3>
+                            <p>Close vulnerable open ports fast.</p>
+                        </div>
+                        <div class="locked-tag">300 XP REQ.</div>
+                    </div>
+                </div>
+            </div>
 
-    <div class="container" id="passMission" style="display:none;">
-        <h2>Password Defense Matrix</h2>
-        <p>Create a password containing: 8+ chars, 1 uppercase, 1 number, 1 symbol (!@#$).</p>
-        <input type="text" id="passInput" placeholder="Enter secure password...">
-        <br><button onclick="checkPassword()">Test Strength</button>
-        <br><button onclick="mainMenu()">Cancel</button>
-    </div>
+            <!-- Password Action -->
+            <div id="game-pass" class="action-card">
+                <h2 style="margin-bottom: 10px;">Security Protocol 01</h2>
+                <p style="opacity: 0.7; font-size: 0.8rem; margin-bottom: 20px;">Required: 8+ length, Uppercase, Number, Special (!@#$)</p>
+                <input type="text" class="cyber-input" id="pwd-input" placeholder=">_ Type password..." autocomplete="off">
+                <button class="btn-action" onclick="checkPwd()">Validate Key</button>
+                <button class="btn-action btn-secondary" onclick="backToMenu()">Back</button>
+            </div>
 
-    <div class="container" id="phishMission" style="display:none;">
-        <h2>Phishing Sweep</h2>
-        <p>Identify which of these incoming emails is a Phishing attempt.</p>
+            <!-- Phishing Action -->
+            <div id="game-phish" class="action-card">
+                <h2 style="margin-bottom: 20px;">Threat Analysis</h2>
+                <div id="email-content" style="background: rgba(0,0,0,0.3); padding: 20px; border-radius: 15px; text-align: left; margin-bottom: 20px; border: 1px solid var(--border-glass);">
+                    <p style="font-size: 0.7rem; color: var(--neon-blue); border-bottom: 1px solid rgba(255,255,255,0.1); padding-bottom: 5px; margin-bottom: 10px;" id="phish-sender">FROM: unknown</p>
+                    <h4 id="phish-sub">No Subject</h4>
+                    <p id="phish-body" style="font-size: 0.9rem; margin-top: 10px;">Loading...</p>
+                </div>
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
+                    <button class="btn-action" style="background: rgba(239, 68, 68, 0.8); color: white;" onclick="reportPhish(true)">Flag Threat</button>
+                    <button class="btn-action" style="background: rgba(16, 185, 129, 0.8); color: white;" onclick="reportPhish(false)">Mark Safe</button>
+                </div>
+                <button class="btn-action btn-secondary" onclick="backToMenu()">Back</button>
+            </div>
 
-        <div class="phishing-card active" id="email1">
-            <div class="sender">From: security@paypal-login-update.com</div>
-            <h3>URGENT: Your account is restricted!</h3>
-            <p>Please click here immediately to update your billing details or your account will be deleted.</p>
-            <button onclick="checkPhish(true, 'email1')">Flag as Phishing</button>
-            <button onclick="checkPhish(false, 'email1')">Mark Safe</button>
+            <!-- Port Guardian Action -->
+            <div id="game-ports" class="action-card">
+                <h2 style="margin-bottom: 5px;">Port Defense</h2>
+                <p id="port-timer" style="color: var(--neon-pink); font-family: 'Fira Code', monospace;">TIME: 20s</p>
+                <div class="port-grid" id="port-grid">
+                    <!-- Ports created in JS -->
+                </div>
+                <p style="font-size: 0.8rem; opacity: 0.6;">Tap the RED ports to close them!</p>
+            </div>
         </div>
 
-        <div class="phishing-card" id="email2">
-            <div class="sender">From: hr@QRIO-wonder.net</div>
-            <h3>Quarterly Team Meeting</h3>
-            <p>Hey team, just a reminder that our quarterly check-in is tomorrow at 10 AM. See you there!</p>
-            <button onclick="checkPhish(true, 'email2')">Flag as Phishing</button>
-            <button onclick="checkPhish(false, 'email2')">Mark Safe</button>
-        </div>
+        <button onclick="window.close()" class="btn-action btn-secondary" style="width: auto; padding: 10px 30px; margin-top: 30px; border-radius: 50px;">Exit Hub</button>
+    </main>
 
-        <br><button onclick="mainMenu()">Cancel</button>
+    <div class="result-panel" id="result-panel">
+        <h1 id="res-title" style="font-size: 2.5rem; margin-bottom: 10px;">SUCCESS</h1>
+        <p id="res-desc" style="margin-bottom: 30px; opacity: 0.8;">Protocol verified successfully.</p>
+        <button class="btn-action" style="max-width: 250px;" onclick="closeResult()">Return to Commands</button>
     </div>
 
-    <div class="game-over" id="gameOverScreen">
-        <h1 id="gameOverTitle">SYSTEM COMPROMISED</h1>
-        <p id="gameOverSub">A threat penetrated the firewall.</p>
-        <button onclick="location.reload()">Reboot System</button>
-    </div>
-
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
     <script>
         let score = 0;
-        let attempts = 3;
+        let pReq = 300; 
+        let phase = 0;
 
-        function showGameOver(title, sub) {
-            document.getElementById('gameOverTitle').innerText = title;
-            document.getElementById('gameOverSub').innerText = sub;
-            document.getElementById('gameOverScreen').style.display = 'flex';
+        const phishData = [
+            { s: "it-support@google-verify.net", h: "Security Alert!", b: "Suspicious login detected in Russia. Click here immediately to change your password or your account will be deleted.", p: true },
+            { s: "team@skillverse.edu", h: "Your Weekly Report", b: "Hey Commander, your progress report for this week is ready. Keep up the great work!", p: false }
+        ];
+        let phIndex = 0;
+
+        function startLvl(type) {
+            gsap.to('.game-shell > div', { opacity: 0, duration: 0.3, onComplete: () => {
+                document.querySelectorAll('.game-shell > div').forEach(d => d.style.display = 'none');
+                if(type === 'pass') document.getElementById('game-pass').style.display = 'block';
+                if(type === 'phish') {
+                    document.getElementById('game-phish').style.display = 'block';
+                    loadPhish();
+                }
+                if(type === 'ports') {
+                    document.getElementById('game-ports').style.display = 'block';
+                    startPortGame();
+                }
+                gsap.fromTo('#game-'+type, { opacity: 0, y: 10 }, { opacity: 1, y: 0, duration: 0.5 });
+            }});
         }
 
-        function updatePoints(amount) {
-            score += amount;
-            document.getElementById('scoreDisplay').innerText = score + " px";
-            alert("Firewall Reinforced! +50 XP");
+        function backToMenu() {
+            startLvl('main');
+            checkUnlocks();
+        }
 
-            // Sync with QRIO Backend
-            let activeId = localStorage.getItem('qrio_active_id');
-            if (activeId) {
+        function checkPwd() {
+            const val = document.getElementById('pwd-input').value;
+            const reg = /^(?=.*[A-Z])(?=.*\d)(?=.*[!@#\$])[A-Za-z\d!@#\$]{8,}$/;
+            if(reg.test(val)) {
+                completeLvl(100, "Password protocol verified. Firewall reinforced.");
+                document.getElementById('pwd-input').value = "";
+            } else {
+                gsap.to('.game-shell', { x: 10, duration: 0.05, repeat: 5, yoyo: true });
+                playTone(200, 'sawtooth', 0.2);
+            }
+        }
+
+        function loadPhish() {
+            const data = phishData[phIndex];
+            document.getElementById('phish-sender').innerText = "FROM: " + data.s;
+            document.getElementById('phish-sub').innerText = data.h;
+            document.getElementById('phish-body').innerText = data.b;
+        }
+
+        function reportPhish(clickedPhish) {
+            const actual = phishData[phIndex].p;
+            if(clickedPhish === actual) {
+                phIndex++;
+                if(phIndex >= phishData.length) {
+                    completeLvl(100, "Phishing sweep complete. Inbox secured.");
+                    phIndex = 0;
+                } else {
+                    loadPhish();
+                    playTone(800, 'sine', 0.1);
+                }
+            } else {
+                showResult("SYSTEM COMPROMISED", "You failed to detect a threat.", false);
+            }
+        }
+
+        let portTimer = 20;
+        let portInt = null;
+        function startPortGame() {
+            portTimer = 20;
+            const grid = document.getElementById('port-grid');
+            grid.innerHTML = "";
+            for(let i=0; i<9; i++) {
+                const p = document.createElement('div');
+                p.className = 'port';
+                p.innerHTML = '<i class="fa-solid fa-plug"></i>';
+                p.onclick = () => {
+                    if(p.classList.contains('vulnerable')) {
+                        p.classList.remove('vulnerable');
+                        p.innerHTML = '<i class="fa-solid fa-lock"></i>';
+                        playTone(600, 'sine', 0.05);
+                        if(document.querySelectorAll('.vulnerable').length === 0) {
+                            clearInterval(portInt);
+                            completeLvl(150, "Ports locked. Network traffic stabilized.");
+                        }
+                    }
+                };
+                grid.appendChild(p);
+            }
+            
+            // Randomly make 5 vulnerable
+            const ports = document.querySelectorAll('.port');
+            let count = 0;
+            while(count < 5) {
+                let idx = Math.floor(Math.random()*9);
+                if(!ports[idx].classList.contains('vulnerable')) {
+                    ports[idx].classList.add('vulnerable');
+                    count++;
+                }
+            }
+
+            portInt = setInterval(() => {
+                portTimer--;
+                document.getElementById('port-timer').innerText = `TIME: ${portTimer}s`;
+                if(portTimer <= 0) {
+                    clearInterval(portInt);
+                    showResult("TIMEOUT", "Breach detected. Closing ports failed.", false);
+                }
+            }, 1000);
+        }
+
+        function completeLvl(pts, desc) {
+            score += pts;
+            document.getElementById('scoreVal').innerText = score;
+            
+            // Save total XP for unlocking
+            const totalXP = (parseInt(localStorage.getItem('qrio_user_xp')) || 0) + pts;
+            localStorage.setItem('qrio_user_xp', totalXP);
+
+            showResult("MISSION SUCCESS", desc, true);
+            syncScore(pts);
+        }
+
+        function showResult(title, desc, win) {
+            document.getElementById('res-title').innerText = title;
+            document.getElementById('res-title').style.color = win ? 'var(--neon-green)' : '#ef4444';
+            document.getElementById('res-desc').innerText = desc;
+            document.getElementById('result-panel').style.display = 'flex';
+            playTone(win?800:150, win?'sine':'sawtooth', 0.5);
+        }
+
+        function closeResult() {
+            document.getElementById('result-panel').style.display = 'none';
+            backToMenu();
+        }
+
+        function checkUnlocks() {
+            if(score >= 300) {
+                document.getElementById('lvl-ports').classList.remove('locked');
+                document.getElementById('lvl-ports').querySelector('.locked-tag').innerText = "UNLOCKED";
+                document.getElementById('levelVal').innerText = "2";
+            }
+        }
+
+        function syncScore(pts) {
+            const uid = localStorage.getItem('qrio_active_id');
+            if (uid) {
                 fetch('/api/points', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ userId: activeId, pointsToAdd: amount })
-                }).catch(console.error);
+                    body: JSON.stringify({ userId: uid, pointsToAdd: pts })
+                }).catch(e => console.error("Sync error"));
             }
         }
 
-        function mainMenu() {
-            document.getElementById('mainMenu').style.display = 'block';
-            document.getElementById('passMission').style.display = 'none';
-            document.getElementById('phishMission').style.display = 'none';
+        let aCtx;
+        function playTone(f, t, d) {
+            if(!aCtx) aCtx = new (window.AudioContext || window.webkitAudioContext)();
+            const o = aCtx.createOscillator();
+            const g = aCtx.createGain();
+            o.connect(g); g.connect(aCtx.destination);
+            o.type = t; o.frequency.setValueAtTime(f, aCtx.currentTime);
+            g.gain.setValueAtTime(0.05, aCtx.currentTime);
+            g.gain.exponentialRampToValueAtTime(0.01, aCtx.currentTime + d);
+            o.start(); o.stop(aCtx.currentTime + d);
         }
-
-        function startPassword() {
-            document.getElementById('mainMenu').style.display = 'none';
-            document.getElementById('passMission').style.display = 'block';
-        }
-
-        function checkPassword() {
-            const pwd = document.getElementById('passInput').value;
-            const regex = /^(?=.*[A-Z])(?=.*\d)(?=.*[!@#\$])[A-Za-z\d!@#\$]{8,}$/;
-            if (regex.test(pwd)) {
-                updatePoints(50);
-                mainMenu();
-            } else {
-                attempts--;
-                if (attempts <= 0) {
-                    showGameOver('SYSTEM LOCKOUT', 'Too many failed login attempts.');
-                } else {
-                    alert(`ACCESS DENIED: Password too weak. ${attempts} attempts remaining.`);
-                }
-            }
-        }
-
-        function startPhishing() {
-            document.getElementById('mainMenu').style.display = 'none';
-            document.getElementById('phishMission').style.display = 'block';
-        }
-
-        function checkPhish(isPhish, emailId) {
-            if (emailId === 'email1' && isPhish) {
-                updatePoints(50);
-                document.getElementById('email1').classList.remove('active');
-                document.getElementById('email2').classList.add('active');
-            } else if (emailId === 'email2' && !isPhish) {
-                updatePoints(50);
-                alert("Sector Cleared. Returning to Main menu.");
-                mainMenu();
-            } else {
-                showGameOver('SYSTEM COMPROMISED', 'You triggered a malicious payload.');
-            }
-        }
-
-        // Minimalist Three.js Matrix-like BG
-        const scene = new THREE.Scene();
-        scene.fog = new THREE.FogExp2(0x020617, 0.002);
-        const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
-        const renderer = new THREE.WebGLRenderer();
-        renderer.setSize(window.innerWidth, window.innerHeight);
-        renderer.domElement.id = 'canvas-bg';
-        document.body.prepend(renderer.domElement);
-
-        const geometry = new THREE.BufferGeometry();
-        const vertices = [];
-        for (let i = 0; i < 10000; i++) {
-            vertices.push(
-                THREE.MathUtils.randFloatSpread(2000),
-                THREE.MathUtils.randFloatSpread(2000),
-                THREE.MathUtils.randFloatSpread(2000)
-            );
-        }
-        geometry.setAttribute('position', new THREE.Float32BufferAttribute(vertices, 3));
-        const material = new THREE.PointsMaterial({ color: 0x10b981, size: 2 });
-        const particles = new THREE.Points(geometry, material);
-        scene.add(particles);
-        camera.position.z = 1000;
-
-        function animate() {
-            requestAnimationFrame(animate);
-            particles.rotation.x += 0.0001;
-            particles.rotation.y += 0.001;
-            renderer.render(scene, camera);
-        }
-        animate();
     </script>
 </body>
-
 </html>

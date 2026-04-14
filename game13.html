@@ -1,0 +1,804 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Rapid Letter Rush - 3D Ultra</title>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;700;900&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/gsap.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
+
+    <style>
+        :root {
+            --pop-blue: #3b82f6;
+            --pop-blue-dark: #2563eb;
+            --pop-pink: #ec4899;
+            --pop-pink-dark: #db2777;
+            --pop-yellow: #f59e0b;
+            --pop-yellow-dark: #d97706;
+            --pop-purple: #8b5cf6;
+            --pop-purple-dark: #7c3aed;
+            --bg-grad-1: #0f172a;
+            --bg-grad-2: #1e1b4b;
+            --text-light: #f8fafc;
+        }
+
+        * {
+            box-sizing: border-box;
+        }
+
+        body {
+            margin: 0;
+            padding: 0;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+            font-family: 'Outfit', sans-serif;
+            background: linear-gradient(135deg, var(--bg-grad-1), var(--bg-grad-2));
+            color: var(--text-light);
+            perspective: 1200px;
+        }
+
+        /* Ambient glowing orbs */
+        .orb {
+            position: absolute;
+            border-radius: 50%;
+            filter: blur(80px);
+            z-index: -1;
+            opacity: 0.6;
+            animation: float 10s infinite ease-in-out alternate;
+        }
+        .orb-1 { top: -10%; left: -10%; width: 50vw; height: 50vw; background: var(--pop-purple); }
+        .orb-2 { bottom: -10%; right: -10%; width: 40vw; height: 40vw; background: var(--pop-blue); animation-delay: -5s; }
+        .orb-3 { top: 40%; left: 30%; width: 30vw; height: 30vw; background: var(--pop-pink); animation-delay: -2s; opacity: 0.4; }
+
+        @keyframes float {
+            0% { transform: translate(0, 0) scale(1); }
+            100% { transform: translate(50px, 50px) scale(1.1); }
+        }
+
+        /* --- Header / HUD 3D Style --- */
+        header {
+            padding: 1.5rem 2rem;
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: space-between;
+            align-items: center;
+            gap: 15px;
+            z-index: 100;
+        }
+
+        .logo {
+            font-weight: 900;
+            font-size: 2rem;
+            color: #fff;
+            text-shadow: 
+                3px 3px 0 var(--pop-pink),
+                6px 6px 0px rgba(0,0,0,0.4);
+            letter-spacing: 2px;
+            transform: rotate(-2deg);
+        }
+
+        .hud-group {
+            display: flex;
+            gap: 15px;
+            flex-wrap: wrap;
+            justify-content: center;
+        }
+
+        .hud-card {
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            border: 2px solid rgba(255, 255, 255, 0.2);
+            padding: 0.8rem 1.5rem;
+            border-radius: 20px;
+            box-shadow: 
+                0 8px 32px rgba(0, 0, 0, 0.3),
+                inset 0 2px 0 rgba(255, 255, 255, 0.3);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            min-width: 90px;
+            transform: translateY(0);
+            transition: transform 0.2s;
+        }
+
+        .hud-label {
+            font-size: 0.75rem;
+            font-weight: 800;
+            text-transform: uppercase;
+            color: rgba(255,255,255,0.7);
+            letter-spacing: 1px;
+        }
+
+        .hud-value {
+            font-size: 1.8rem;
+            font-weight: 900;
+            color: #fff;
+            text-shadow: 0 4px 15px rgba(255,255,255,0.4);
+        }
+
+        .btn-home {
+            background: linear-gradient(135deg, var(--pop-purple), var(--pop-purple-dark));
+            border: 3px solid rgba(255,255,255,0.3);
+            border-radius: 50%;
+            width: 55px;
+            height: 55px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.3rem;
+            color: white;
+            cursor: pointer;
+            box-shadow: 
+                0 6px 0px var(--pop-purple-dark), 
+                0 10px 15px rgba(0, 0, 0, 0.4);
+            transition: all 0.1s;
+        }
+
+        .btn-home:active {
+            transform: translateY(6px);
+            box-shadow: 0 0px 0px var(--pop-purple-dark), 0 5px 5px rgba(0, 0, 0, 0.4);
+        }
+
+        /* --- Game Area --- */
+        #gameArea {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            gap: 2rem;
+            padding: 1rem 2rem;
+            position: relative;
+        }
+
+        .letter-grid {
+            display: flex;
+            gap: 2rem;
+            perspective: 1200px;
+            z-index: 10;
+        }
+
+        /* Ultra 3D Letter Cubes */
+        .card-wrapper {
+            position: relative;
+            transform-style: preserve-3d;
+        }
+
+        .letter-card {
+            width: clamp(90px, 15vw, 150px);
+            height: clamp(130px, 20vw, 190px);
+            border-radius: 25px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            position: relative;
+            color: white;
+            transform-style: preserve-3d;
+            box-shadow: 
+                inset 5px 5px 15px rgba(255,255,255,0.4),
+                inset -5px -5px 15px rgba(0,0,0,0.2),
+                0 15px 0px rgba(0,0,0,0.4),
+                0 25px 30px rgba(0,0,0,0.5);
+            transition: all 0.1s;
+            border: 2px solid rgba(255,255,255,0.5);
+        }
+
+        /* Different Colors for Cards */
+        .color-0 { background: linear-gradient(135deg, var(--pop-blue), var(--pop-blue-dark)); box-shadow: inset 5px 5px 15px rgba(255,255,255,0.4), inset -5px -5px 15px rgba(0,0,0,0.2), 0 15px 0px var(--pop-blue-dark), 0 25px 30px rgba(0,0,0,0.5); }
+        .color-1 { background: linear-gradient(135deg, var(--pop-pink), var(--pop-pink-dark)); box-shadow: inset 5px 5px 15px rgba(255,255,255,0.4), inset -5px -5px 15px rgba(0,0,0,0.2), 0 15px 0px var(--pop-pink-dark), 0 25px 30px rgba(0,0,0,0.5); }
+        .color-2 { background: linear-gradient(135deg, var(--pop-yellow), var(--pop-yellow-dark)); box-shadow: inset 5px 5px 15px rgba(255,255,255,0.4), inset -5px -5px 15px rgba(0,0,0,0.2), 0 15px 0px var(--pop-yellow-dark), 0 25px 30px rgba(0,0,0,0.5); }
+        .color-3 { background: linear-gradient(135deg, var(--pop-purple), var(--pop-purple-dark)); box-shadow: inset 5px 5px 15px rgba(255,255,255,0.4), inset -5px -5px 15px rgba(0,0,0,0.2), 0 15px 0px var(--pop-purple-dark), 0 25px 30px rgba(0,0,0,0.5); }
+
+        .letter-card::before {
+            content: '';
+            position: absolute;
+            top: 5%;
+            left: 10%;
+            width: 40%;
+            height: 30%;
+            background: linear-gradient(180deg, rgba(255,255,255,0.8), rgba(255,255,255,0));
+            border-radius: 20px;
+            transform: rotate(-15deg);
+            pointer-events: none;
+        }
+
+        .letter-card.solved {
+            background: linear-gradient(135deg, #10b981, #047857);
+            box-shadow: inset 5px 5px 15px rgba(255,255,255,0.4), inset -5px -5px 15px rgba(0,0,0,0.2), 0 5px 0px #047857, 0 15px 20px rgba(0,0,0,0.5);
+            transform: translateY(10px) scale(0.95);
+            filter: grayscale(0.2);
+            border-color: rgba(255,255,255,0.2);
+        }
+
+        .card-char {
+            font-size: clamp(3.5rem, 8vw, 6rem);
+            font-weight: 900;
+            text-shadow: 3px 4px 0px rgba(0,0,0,0.3);
+            transform: translateZ(30px); /* Popping out text */
+        }
+
+        .card-word {
+            font-size: 1rem;
+            font-weight: 900;
+            color: #fff;
+            position: absolute;
+            bottom: 15px;
+            text-transform: uppercase;
+            text-shadow: 1px 2px 0px rgba(0,0,0,0.5);
+            transform: translateZ(20px);
+            background: rgba(0,0,0,0.3);
+            padding: 5px 10px;
+            border-radius: 10px;
+            opacity: 0;
+            transition: opacity 0.3s;
+        }
+        .solved .card-word { opacity: 1; }
+
+        .shuffle-timer {
+            position: absolute;
+            top: -15px;
+            right: -15px;
+            width: 40px;
+            height: 40px;
+            background: linear-gradient(135deg, #fff, #f1f5f9);
+            color: var(--text-dark);
+            border: 4px solid var(--bg-grad-1);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 0.9rem;
+            font-weight: 900;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.5);
+            transform: translateZ(40px);
+            color: #0f172a;
+        }
+
+        /* --- 3D Input Area --- */
+        #inputArea {
+            width: 100%;
+            max-width: 600px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 1.5rem;
+            z-index: 20;
+            perspective: 800px;
+        }
+
+        .input-group {
+            display: flex;
+            gap: 10px;
+            width: 100%;
+            align-items: stretch;
+            justify-content: center;
+        }
+
+        .main-input {
+            flex: 1;
+            padding: 1.2rem !important;
+            font-size: 1.8rem !important;
+            font-weight: 900 !important;
+            text-align: center;
+            text-transform: uppercase;
+            background: rgba(255,255,255,0.95);
+            color: var(--bg-grad-1);
+            border: 6px solid #fff !important;
+            border-radius: 20px !important;
+            box-shadow: 
+                inset 0 4px 10px rgba(0,0,0,0.1),
+                0 10px 0px #94a3b8,
+                0 20px 25px rgba(0,0,0,0.5);
+            outline: none;
+            transition: all 0.1s;
+            font-family: 'Outfit', sans-serif;
+            min-width: 0; /* Important for flex */
+        }
+
+        .main-input:focus {
+            transform: translateY(4px);
+            box-shadow: 
+                inset 0 4px 10px rgba(0,0,0,0.1),
+                0 6px 0px #94a3b8,
+                0 15px 20px rgba(0,0,0,0.5);
+            border-color: var(--pop-blue) !important;
+        }
+
+        .main-input::placeholder {
+            color: #cbd5e1;
+        }
+
+        .btn-submit {
+            background: linear-gradient(135deg, var(--pop-pink), var(--pop-pink-dark));
+            border: 4px solid white;
+            border-radius: 20px;
+            padding: 0 25px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.6rem;
+            color: white;
+            cursor: pointer;
+            box-shadow: 
+                0 10px 0px var(--pop-pink-dark), 
+                0 15px 25px rgba(0, 0, 0, 0.4);
+            transition: all 0.1s;
+        }
+
+        .btn-submit:active {
+            transform: translateY(6px);
+            box-shadow: 0 4px 0px var(--pop-pink-dark), 0 5px 10px rgba(0, 0, 0, 0.4);
+        }
+
+        .input-hint {
+            font-weight: 900;
+            color: #fff;
+            font-size: 1rem;
+            letter-spacing: 1px;
+            text-transform: uppercase;
+            text-shadow: 2px 2px 0 rgba(0,0,0,0.5);
+            background: rgba(0,0,0,0.3);
+            padding: 8px 20px;
+            border-radius: 20px;
+            backdrop-filter: blur(5px);
+            text-align: center;
+        }
+
+        /* --- Overlays --- */
+        .overlay {
+            position: fixed;
+            inset: 0;
+            background: rgba(15, 23, 42, 0.85);
+            backdrop-filter: blur(15px);
+            -webkit-backdrop-filter: blur(15px);
+            z-index: 2000;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 2rem;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.4s ease;
+        }
+
+        .overlay.active {
+            opacity: 1;
+            pointer-events: all;
+        }
+
+        .modal {
+            background: linear-gradient(145deg, rgba(255,255,255,0.1), rgba(255,255,255,0.05));
+            border: 2px solid rgba(255,255,255,0.2);
+            padding: 3rem 2rem;
+            border-radius: 40px;
+            box-shadow: 0 30px 60px rgba(0,0,0,0.6), inset 0 2px 0 rgba(255,255,255,0.3);
+            max-width: 450px;
+            width: 100%;
+            text-align: center;
+            transform: translateY(50px);
+            transition: transform 0.5s cubic-bezier(0.34, 1.56, 0.64, 1);
+            display: flex;
+            flex-direction: column;
+            gap: 15px; /* Spacing between elements inside modal */
+        }
+
+        .overlay.active .modal {
+            transform: translateY(0);
+        }
+
+        .modal h1 {
+            color: #fff;
+            font-weight: 900;
+            font-size: 2.5rem;
+            margin: 0;
+            text-shadow: 3px 4px 0 var(--pop-blue), 6px 8px 0px rgba(0,0,0,0.5);
+            letter-spacing: 1px;
+        }
+        
+        .modal p {
+            color: #cbd5e1;
+            font-size: 1.1rem;
+            line-height: 1.5;
+            font-weight: 600;
+            margin: 0;
+        }
+
+        .btn-play {
+            width: 100%;
+            padding: 1.2rem;
+            font-size: 1.2rem;
+            font-weight: 900;
+            font-family: 'Outfit', sans-serif;
+            color: white;
+            background: linear-gradient(135deg, var(--pop-pink), var(--pop-pink-dark));
+            border: 4px solid white;
+            border-radius: 20px;
+            cursor: pointer;
+            box-shadow: 
+                0 8px 0 var(--pop-pink-dark), 
+                0 15px 25px rgba(219, 39, 119, 0.5);
+            transition: all 0.1s;
+            text-transform: uppercase;
+        }
+
+        .btn-play:active {
+            transform: translateY(8px);
+            box-shadow: 0 0px 0 var(--pop-pink-dark), 0 5px 10px rgba(219, 39, 119, 0.5);
+        }
+
+        .btn-secondary {
+            background: rgba(255,255,255,0.1);
+            color: #fff;
+            border-color: rgba(255,255,255,0.3);
+            box-shadow: 0 8px 0 rgba(0,0,0,0.4);
+            margin-top: 0.5rem;
+        }
+        .btn-secondary:active {
+            box-shadow: 0 0px 0 rgba(0,0,0,0.4);
+            transform: translateY(8px);
+        }
+
+        @media (max-width: 768px) {
+            header { flex-direction: column; gap: 1rem; padding: 1rem; }
+            #gameArea { padding: 10px; gap: 1rem; flex: 1; justify-content: flex-start; margin-top: 20px;}
+            .letter-grid { gap: 1rem; flex-wrap: wrap; justify-content: center; }
+            .letter-card { width: clamp(70px, 40vw, 110px); height: clamp(100px, 45vw, 150px); }
+            .card-char { font-size: 3.5rem; }
+            .input-group { flex-direction: column; gap: 15px;}
+            .btn-submit { width: 100%; height: 60px; font-size: 1.5rem; border-radius: 15px;}
+            .main-input { font-size: 1.4rem !important; padding: 1rem !important; width: 100%; border-radius: 15px !important;}
+            .modal { padding: 2rem 1.5rem; gap: 10px;}
+            .modal h1 { font-size: 2rem; }
+            .logo { font-size: 1.5rem; }
+            .hud-value { font-size: 1.4rem; }
+        }
+    </style>
+</head>
+
+<body>
+    <!-- Ambient 3D BG -->
+    <div class="orb orb-1"></div>
+    <div class="orb orb-2"></div>
+    <div class="orb orb-3"></div>
+
+    <header>
+        <div class="logo">RAPID RUSH ⚡</div>
+        <div class="hud-group">
+            <div class="hud-card">
+                <div class="hud-label">Score</div>
+                <div class="hud-value" id="scoreDisplay">0</div>
+            </div>
+            <div class="hud-card">
+                <div class="hud-label">Timer</div>
+                <div class="hud-value" id="timerDisplay" style="color:var(--pop-yellow)">60</div>
+            </div>
+            <div class="hud-card">
+                <div class="hud-label">Streak</div>
+                <div class="hud-value" id="streakDisplay" style="color:var(--pop-pink)">0</div>
+            </div>
+        </div>
+        <button onclick="location.href='index.html'" class="btn-home" title="Home">
+            <i class="fa-solid fa-house"></i>
+        </button>
+    </header>
+
+    <main id="gameArea">
+        <div class="letter-grid" id="letterGrid">
+            <!-- Cards injected by JS -->
+        </div>
+
+        <div id="inputArea">
+            <div class="input-group">
+                <input type="text" class="main-input" id="wordInput" placeholder="START TYPING..." autocomplete="off">
+                <button class="btn-submit" onclick="submitWord()" title="Submit Word">
+                    <i class="fa-solid fa-paper-plane"></i>
+                </button>
+            </div>
+            <div class="input-hint" id="statusText">
+                <i class="fa-solid fa-keyboard"></i> Type a word starting with ANY of the letters above!
+            </div>
+        </div>
+    </main>
+
+    <!-- Start Overlay -->
+    <div class="overlay active" id="startMenu">
+        <div class="modal">
+            <div style="font-size: 4rem; filter: drop-shadow(0 10px 10px rgba(0,0,0,0.5));">✍️</div>
+            <h1>Word Generator</h1>
+            <p>
+                Type real English words that <b>start</b> with the glowing letters on screen. Use the Submit button. Letters shuffle every 10s!
+            </p>
+            <div style="margin-top: 10px; width: 100%;">
+                <button class="btn-play" onclick="startGame()"><i class="fa-solid fa-bolt"></i> START RUSH!</button>
+                <button class="btn-play btn-secondary" onclick="location.href='index.html'"><i class="fa-solid fa-house"></i> BACK HOME</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Game Over Overlay -->
+    <div class="overlay" id="gameOverMenu">
+        <div class="modal">
+            <div style="font-size: 5rem; filter: drop-shadow(0 10px 10px rgba(0,0,0,0.5));">🏆</div>
+            <h1 id="endTitle">TIME'S UP!</h1>
+            <p id="endStats" style="font-size: 1.4rem; font-weight: 700; color:var(--pop-yellow);">You scored 0 points!</p>
+            <div style="margin-top: 10px; width: 100%;">
+                <button class="btn-play" onclick="location.reload()"><i class="fa-solid fa-rotate-right"></i> PLAY AGAIN</button>
+                <button class="btn-play btn-secondary" onclick="location.href='index.html'"><i class="fa-solid fa-house"></i> MAIN MENU</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let gameState = {
+            score: 0,
+            streak: 0,
+            timeLeft: 60,
+            shuffleTime: 10,
+            active: false,
+            letters: [],
+            usedWords: new Set(),
+            cycleSolved: 0
+        };
+
+        const alphabet = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ';
+        let timerInterval, shuffleInterval;
+        let floatTweens = [];
+
+        function startGame() {
+            document.getElementById('startMenu').classList.remove('active');
+            
+            // Cool entry animation for the input area
+            gsap.from('#inputArea', { y: 200, opacity: 0, scale: 0.8, duration: 1.5, ease: "elastic.out(1, 0.5)" });
+
+            gameState.active = true;
+            generateLetters();
+            startMainTimer();
+            startShuffleTimer();
+            setTimeout(() => document.getElementById('wordInput').focus(), 500);
+        }
+
+        function generateLetters() {
+            gameState.letters = [];
+            gameState.cycleSolved = 0;
+            for (let i = 0; i < 4; i++) {
+                gameState.letters.push({
+                    char: alphabet[Math.floor(Math.random() * alphabet.length)],
+                    solved: false,
+                    word: ''
+                });
+            }
+            renderLetters();
+        }
+
+        function renderLetters() {
+            const grid = document.getElementById('letterGrid');
+            grid.innerHTML = '';
+            
+            // Clean up old tweens safely
+            floatTweens.forEach(t => t.kill());
+            floatTweens = [];
+
+            gameState.letters.forEach((l, i) => {
+                const wrapper = document.createElement('div');
+                wrapper.className = 'card-wrapper';
+                
+                const card = document.createElement('div');
+                card.className = `letter-card color-${i % 4}`;
+                card.id = `card-${i}`;
+                card.innerHTML = `
+                    <div class="shuffle-timer" id="st-${i}">${gameState.shuffleTime}</div>
+                    <div class="card-char">${l.char}</div>
+                    <div class="card-word">${l.word}</div>
+                `;
+                
+                wrapper.appendChild(card);
+                grid.appendChild(wrapper);
+                
+                // Drop in 3D animation
+                gsap.from(wrapper, { 
+                    y: -500, 
+                    z: -500,
+                    rotationX: 360 * (Math.random()>0.5?1:-1),
+                    rotationY: 360 * (Math.random()>0.5?1:-1),
+                    opacity: 0, 
+                    delay: i * 0.15, 
+                    duration: 1.2,
+                    ease: "bounce.out",
+                    onComplete: () => {
+                        // Float in 3D space continuously 
+                        let t = gsap.to(wrapper, {
+                            y: "-=15",
+                            rotationX: Math.random() * 10 - 5,
+                            rotationY: Math.random() * 10 - 5,
+                            duration: 1.5 + Math.random(),
+                            yoyo: true,
+                            repeat: -1,
+                            ease: "sine.inOut"
+                        });
+                        floatTweens.push(t);
+                    }
+                });
+            });
+        }
+
+        function startMainTimer() {
+            timerInterval = setInterval(() => {
+                if (!gameState.active) return;
+                gameState.timeLeft--;
+                const tEl = document.getElementById('timerDisplay');
+                tEl.innerText = gameState.timeLeft;
+                if(gameState.timeLeft <= 10) {
+                    tEl.style.color = 'var(--pop-pink)';
+                    gsap.to(tEl, { scale: 1.2, duration: 0.2, yoyo: true, repeat: 1 });
+                }
+                if (gameState.timeLeft <= 0) endGame("TIME'S UP!");
+            }, 1000);
+        }
+
+        function startShuffleTimer() {
+            shuffleInterval = setInterval(() => {
+                if (!gameState.active) return;
+                gameState.shuffleTime--;
+                
+                for(let i=0; i<4; i++) {
+                    const t = document.getElementById(`st-${i}`);
+                    if(t) {
+                        t.innerText = gameState.shuffleTime;
+                        if(gameState.shuffleTime <= 3) {
+                            t.style.color = 'var(--pop-pink)';
+                            gsap.to(t, { scale: 1.3, duration: 0.2, yoyo: true, repeat: 1 });
+                        } else {
+                            t.style.color = '#0f172a';
+                        }
+                    }
+                }
+
+                if (gameState.shuffleTime <= 0) {
+                    shuffleLetters();
+                }
+            }, 1000);
+        }
+
+        function shuffleLetters() {
+            gameState.shuffleTime = 10;
+            // Pop out current cards
+            gsap.to('.card-wrapper', {
+                y: 500, opacity: 0, stagger: 0.05, duration: 0.5, ease: "power2.in",
+                onComplete: generateLetters
+            });
+        }
+
+        const wordInput = document.getElementById('wordInput');
+        wordInput.addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') {
+                submitWord();
+            }
+        });
+
+        function submitWord() {
+            if (!gameState.active) return;
+            gsap.to(wordInput, { scale: 0.95, duration: 0.1, yoyo: true, repeat: 1 });
+            const val = wordInput.value.trim().toLowerCase();
+            if (val) {
+                validateWord(val);
+                wordInput.value = '';
+            }
+        }
+
+        async function validateWord(word) {
+            if (word.length < 2) return setStatus("⚠️ WORD TOO SHORT", true);
+            if (gameState.usedWords.has(word)) return setStatus("⚠️ ALREADY USED", true);
+
+            const firstLetter = word[0].toUpperCase();
+            const cardIdx = gameState.letters.findIndex(l => l.char === firstLetter && !l.solved);
+
+            if (cardIdx === -1) {
+                shakeInput();
+                return setStatus(`⚠️ NO CARD FOR '${firstLetter}'`, true);
+            }
+
+            setStatus("⏳ CHECKING DICTIONARY...", false);
+            
+            try {
+                const res = await fetch(`https://api.dictionaryapi.dev/api/v2/entries/en/${word}`);
+                if (res.ok) {
+                    handleSuccess(cardIdx, word);
+                } else {
+                    setStatus(`⚠️ '${word.toUpperCase()}' IS NOT A WORD`, true);
+                    shakeInput();
+                }
+            } catch (err) {
+                // Fallback
+                handleSuccess(cardIdx, word);
+            }
+        }
+
+        function handleSuccess(idx, word) {
+            gameState.usedWords.add(word);
+            gameState.letters[idx].solved = true;
+            gameState.letters[idx].word = word;
+            
+            const earnedPts = word.length * 2;
+            gameState.score += earnedPts;
+            gameState.streak++;
+            gameState.cycleSolved++;
+
+            const scoreEl = document.getElementById('scoreDisplay');
+            scoreEl.innerText = gameState.score;
+            gsap.from(scoreEl, { scale: 2, color: 'var(--pop-mint)', duration: 0.5 });
+            
+            const streakEl = document.getElementById('streakDisplay');
+            streakEl.innerText = gameState.streak;
+            gsap.from(streakEl, { scale: 1.5, duration: 0.3 });
+
+            setStatus(`✨ +${earnedPts} POINTS!`, false);
+
+            const card = document.getElementById(`card-${idx}`);
+            card.classList.add('solved');
+            card.querySelector('.card-word').innerText = word;
+            card.querySelector('.shuffle-timer').style.display = 'none';
+            
+            gsap.to(card, { rotationY: 360, scale: 0.95, duration: 0.8, ease: "back.out(1.5)" });
+
+            if (gameState.cycleSolved === 4) {
+                gameState.score += 20; // Big bonus
+                document.getElementById('scoreDisplay').innerText = gameState.score;
+                confetti({ particleCount: 200, spread: 100, origin: { y: 0.6 }, zIndex: 3000 });
+                setStatus("🔥 BOARD CLEARED! +20 BONUS 🔥", false);
+                setTimeout(() => {
+                    shuffleLetters();
+                }, 1500);
+            }
+        }
+
+        function setStatus(text, isError) {
+            const status = document.getElementById('statusText');
+            status.innerHTML = text;
+            status.style.color = isError ? 'var(--pop-pink)' : '#10b981';
+            
+            // Flash effect for status box
+            gsap.fromTo(status, { backgroundColor: isError ? 'rgba(236,72,153,0.4)': 'rgba(16,185,129,0.4)' }, { backgroundColor: 'rgba(0,0,0,0.3)', duration: 0.5 });
+
+            if (isError) {
+                gameState.streak = 0;
+                document.getElementById('streakDisplay').innerText = 0;
+            }
+        }
+
+        function shakeInput() {
+            gsap.to('.input-group', { x: 15, duration: 0.08, yoyo: true, repeat: 5 });
+            gsap.to('.main-input', { borderColor: 'var(--pop-pink)', duration: 0.1, yoyo: true, repeat: 1, onComplete: () => {
+                document.querySelector('.main-input').style.borderColor = '#fff';
+            }});
+        }
+
+        function endGame(reason) {
+            gameState.active = false;
+            clearInterval(timerInterval);
+            clearInterval(shuffleInterval);
+            document.getElementById('gameOverMenu').classList.add('active');
+            document.getElementById('endTitle').innerText = reason;
+            document.getElementById('endStats').innerText = `You scored ${gameState.score} points!`;
+            saveScore(gameState.score);
+        }
+
+        function saveScore(pts) {
+            const uid = localStorage.getItem('qrio_active_id');
+            if (uid) {
+                fetch('/api/points', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ userId: uid, pointsToAdd: pts })
+                }).catch(e => console.error("Score sync failed"));
+            }
+        }
+    </script>
+</body>
+</html>

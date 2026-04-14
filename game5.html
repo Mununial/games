@@ -3,204 +3,271 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Qrio Community Battle Arena</title>
-    <script src="/socket.io/socket.io.js"></script>
+    <title>Battle Arena - 3D Ultra</title>
+    <!-- Use CDN Socket.io -->
+    <script src="https://cdn.socket.io/4.7.2/socket.io.min.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;700;900&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/gsap.min.js"></script>
+
     <style>
-        @import url('https://fonts.googleapis.com/css2?family=Outfit:wght@400;700;900&display=swap');
-
         :root {
-            --primary: #6366f1;
-            --secondary: #ec4899;
-            --bg-dark: #0a0314;
-            --glass: rgba(255, 255, 255, 0.05);
-            --glass-border: rgba(255, 255, 255, 0.1);
+            --pop-blue: #3b82f6;
+            --pop-blue-dark: #1d4ed8;
+            --pop-pink: #ec4899;
+            --pop-pink-dark: #be185d;
+            --pop-purple: #8b5cf6;
+            --pop-purple-dark: #6d28d9;
+            --pop-green: #10b981;
+            --pop-green-dark: #047857;
+            --bg-grad-1: #0f172a;
+            --bg-grad-2: #1e1b4b;
+            --text-light: #f8fafc;
         }
 
-        body {
-            margin: 0;
-            padding: 0;
-            background: var(--bg-dark);
-            color: white;
+        * {
+            box-sizing: border-box;
+            user-select: none;
+            margin: 0; padding: 0;
+        }
+
+        body, html {
+            width: 100%; height: 100%;
             font-family: 'Outfit', sans-serif;
+            background: linear-gradient(135deg, var(--bg-grad-1), var(--bg-grad-2));
+            color: var(--text-light);
             overflow: hidden;
-            background: radial-gradient(circle at center, #1e1b4b 0%, #0a0314 100%);
-        }
-
-        #battle-app {
-            height: 100vh;
             display: flex;
-            flex-direction: column;
             align-items: center;
             justify-content: center;
-            padding: 20px;
+        }
+
+        /* Ambient Glowing Background */
+        .orb {
+            position: absolute;
+            border-radius: 50%;
+            filter: blur(80px);
+            z-index: 1;
+            opacity: 0.4;
+            pointer-events: none;
+        }
+        .orb-1 { top: -10%; left: -10%; width: 50vw; height: 50vw; background: var(--pop-blue); }
+        .orb-2 { bottom: -10%; right: -10%; width: 40vw; height: 40vw; background: var(--pop-pink); }
+        .orb-3 { top: 40%; left: 30%; width: 30vw; height: 30vw; background: var(--pop-purple); }
+
+        #battle-app {
+            position: relative;
+            z-index: 10;
+            width: 90%;
+            max-width: 500px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
         }
 
         .battle-card {
-            background: var(--glass);
-            backdrop-filter: blur(20px);
-            border: 1px solid var(--glass-border);
-            border-radius: 30px;
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(25px);
+            -webkit-backdrop-filter: blur(25px);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            border-radius: 35px;
             padding: 40px;
             width: 100%;
-            max-width: 500px;
+            box-shadow: 0 25px 50px rgba(0,0,0,0.5), inset 0 2px 0 rgba(255,255,255,0.2);
             text-align: center;
-            box-shadow: 0 20px 50px rgba(0,0,0,0.5);
+            /* No initial hidden states for reliability */
         }
 
         .lobby-title {
-            font-size: 2.5rem;
+            font-size: 2.8rem;
             font-weight: 900;
-            background: linear-gradient(90deg, #6366f1, #ec4899);
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-            margin-bottom: 30px;
+            margin-bottom: 25px;
+            text-transform: uppercase;
+            text-shadow: 0 10px 20px rgba(0,0,0,0.3), 3px 3px 0 var(--pop-blue);
         }
 
         input {
             width: 100%;
-            padding: 15px;
-            margin: 10px 0;
-            border-radius: 12px;
-            border: 1px solid var(--glass-border);
-            background: rgba(255,255,255,0.05);
-            color: white;
-            font-size: 1rem;
+            background: #fff;
+            border: 4px solid #fff;
+            border-radius: 18px;
+            padding: 18px;
+            color: #0f172a;
+            font-size: 1.1rem;
+            font-weight: 900;
+            margin-bottom: 15px;
             outline: none;
-            box-sizing: border-box;
+            box-shadow: 0 8px 0px rgba(0,0,0,0.1);
         }
+
+        .btn-group { display: flex; gap: 10px; }
 
         button {
-            width: 100%;
-            padding: 15px;
-            margin: 10px 0;
-            border-radius: 12px;
-            border: none;
-            background: var(--primary);
-            color: white;
+            flex: 1;
+            padding: 18px;
+            border-radius: 18px;
+            border: 2px solid rgba(255,255,255,0.3);
+            background: linear-gradient(135deg, var(--pop-blue), var(--pop-blue-dark));
+            color: #fff;
             font-weight: 900;
+            font-size: 1.1rem;
             cursor: pointer;
-            transition: 0.3s;
+            box-shadow: 0 6px 0 var(--pop-blue-dark);
+            transition: all 0.1s;
+            text-transform: uppercase;
         }
 
-        button:hover { transform: scale(1.02); background: var(--secondary); }
+        button:active { transform: translateY(4px); box-shadow: 0 2px 0 var(--pop-blue-dark); }
 
-        .player-list {
-            margin-top: 20px;
-            text-align: left;
-        }
+        .btn-purple { background: linear-gradient(135deg, var(--pop-purple), var(--pop-purple-dark)); box-shadow: 0 6px 0 var(--pop-purple-dark); }
+        .btn-purple:active { box-shadow: 0 2px 0 var(--pop-purple-dark); }
+
+        .btn-green { background: linear-gradient(135deg, var(--pop-green), var(--pop-green-dark)); box-shadow: 0 6px 0 var(--pop-green-dark); }
+        .btn-green:active { box-shadow: 0 2px 0 var(--pop-green-dark); }
 
         .player-item {
-            display: flex;
-            justify-content: space-between;
-            padding: 10px;
+            display: flex; justify-content: space-between;
             background: rgba(255,255,255,0.05);
-            border-radius: 8px;
-            margin-bottom: 5px;
+            padding: 12px 20px;
+            border-radius: 15px;
+            margin-bottom: 8px;
+            font-weight: 800;
+            border: 1px solid rgba(255,255,255,0.1);
         }
 
-        .game-area { display: none; width: 100%; max-width: 600px; }
-        .question-box { font-size: 1.5rem; margin-bottom: 30px; }
+        .question-text { font-size: 2.2rem; font-weight: 900; margin-bottom: 30px; text-shadow: 0 5px 15px rgba(0,0,0,0.5); }
         .options-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; }
 
+        /* Fixed HUDs */
         #leaderboard {
             position: fixed;
-            top: 20px;
-            right: 20px;
-            width: 200px;
-            background: var(--glass);
-            padding: 15px;
-            border-radius: 15px;
-            font-size: 0.8rem;
+            top: 20px; right: 20px;
+            width: 220px;
+            background: rgba(255,255,255,0.1);
+            backdrop-filter: blur(20px);
+            border: 1px solid rgba(255,255,255,0.2);
+            padding: 20px;
+            border-radius: 20px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+            z-index: 100;
+        }
+
+        .exit-btn {
+            position: fixed;
+            bottom: 20px; left: 20px;
+            padding: 12px 25px;
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(15px);
+            border: 1px solid rgba(255,255,255,0.2);
+            border-radius: 50px;
+            font-weight: 900;
+            color: white;
+            cursor: pointer;
+            z-index: 100;
+            display: flex; align-items: center; gap: 8px;
+        }
+
+        @media (max-width: 600px) {
+            #leaderboard { position: relative; top: auto; right: auto; width: 100%; margin-top: 20px; order: 2; }
+            #battle-app { flex-direction: column; height: auto; padding-top: 80px; }
+            .options-grid { grid-template-columns: 1fr; }
         }
     </style>
 </head>
 <body>
+    <div class="orb orb-1"></div>
+    <div class="orb orb-2"></div>
+    <div class="orb orb-3"></div>
 
     <div id="battle-app">
-        <!-- Lobby Section -->
+        <!-- Lobby -->
         <div id="lobby" class="battle-card">
-            <h1 class="lobby-title">BATTLE ARENA</h1>
-            <input type="text" id="playerName" placeholder="Enter Your Agent Name">
-            <input type="text" id="roomId" placeholder="Enter Room ID (e.g. QRIO123)">
-            <div style="display:flex; gap:10px;">
-                <button onclick="createRoom()">CREATE ROOM</button>
-                <button onclick="joinRoom()" style="background:var(--secondary);">JOIN ROOM</button>
+            <div style="font-size: 3rem; margin-bottom: 15px;">⚔️</div>
+            <h1 class="lobby-title">Battle Arena</h1>
+            <input type="text" id="playerName" placeholder="AGENT NAME..." autocomplete="off">
+            <input type="text" id="roomId" placeholder="ROOM CODE..." autocomplete="off">
+            <div class="btn-group">
+                <button onclick="createRoom()">CREATE</button>
+                <button onclick="joinRoom()" class="btn-purple">JOIN</button>
             </div>
             
-            <div id="roomInfo" style="display:none; margin-top:20px;">
-                <h3 style="color:var(--primary);">Room: <span id="currentRoomId"></span></h3>
-                <div class="player-list" id="playerList"></div>
-                <button id="startBtn" onclick="startGame()" style="background:linear-gradient(90deg, #10b981, #059669); display:none;">START BATTLE 🚀</button>
+            <div id="roomInfo" style="display:none; margin-top:25px; border-top: 1px solid rgba(255,255,255,0.1); padding-top: 20px;">
+                <h3 style="color:var(--pop-blue); font-weight: 900; margin-bottom: 15px;">ROOM: <span id="currentRoomId" style="color:white"></span></h3>
+                <div id="playerList"></div>
+                <button id="startBtn" class="btn-green" onclick="startGame()" style="display:none; margin-top: 15px;">START BATTLE 🚀</button>
             </div>
         </div>
 
-        <!-- Game Section -->
-        <div id="game-arena" class="game-area battle-card">
-            <div class="question-box" id="question">What is 25 x 4?</div>
-            <div class="options-grid" id="options">
-                <!-- Dynamically filled -->
-            </div>
+        <!-- Game Area -->
+        <div id="game-arena" class="battle-card" style="display: none;">
+            <div id="question" class="question-text">READY?</div>
+            <div id="options" class="options-grid"></div>
         </div>
-
-        <div id="leaderboard" style="display:none;">
-            <h4 style="margin:0 0 10px 0;">Agent Ranking</h4>
-            <div id="rankings"></div>
-        </div>
-
-        <button onclick="location.href='index.html'" style="position:fixed; bottom:20px; left:20px; width:auto; padding:10px 20px; background:rgba(0,0,0,0.5); border:1px solid var(--glass-border);"><i class="fa-solid fa-arrow-left"></i> EXIT</button>
     </div>
 
+    <!-- Persistent Leaderboard -->
+    <div id="leaderboard">
+        <h4 style="font-size: 0.8rem; letter-spacing: 2px; color: var(--pop-blue); margin-bottom: 10px; font-weight: 900;">AGENT SCORES</h4>
+        <div id="rankings"></div>
+    </div>
+
+    <button onclick="location.href='index.html'" class="exit-btn"><i class="fa-solid fa-arrow-left"></i> EXIT</button>
+
     <script>
-        const socket = io('');
+        // Use CDN for better reliability
+        const socket = (typeof io !== 'undefined') ? io() : { on:()=>{}, emit:()=>{} };
+
         let currentRoom = null;
         let myName = "";
         let isHost = false;
 
+        // Entry Animations
+        window.onload = () => {
+            gsap.from('.battle-card', { opacity: 0, y: 50, duration: 0.8, ease: "power3.out" });
+            gsap.to('.orb', { x: "random(-40, 40)", y: "random(-40, 40)", duration: 6, repeat: -1, yoyo: true, ease: "sine.inOut" });
+        };
+
         function createRoom() {
             const rid = document.getElementById('roomId').value;
             myName = document.getElementById('playerName').value;
-            if(!rid || !myName) return alert("Pura details bharo Agent!");
+            if(!rid || !myName) return alert("All fields required!");
             isHost = true;
             currentRoom = rid;
             socket.emit('createRoom', { roomId: rid, playerName: myName });
+            playTone(400, 'sine', 0.1);
         }
 
         function joinRoom() {
             const rid = document.getElementById('roomId').value;
             myName = document.getElementById('playerName').value;
-            if(!rid || !myName) return alert("Room ID aur Name chahiye!");
+            if(!rid || !myName) return alert("All fields required!");
             currentRoom = rid;
             socket.emit('joinRoom', { roomId: rid, playerName: myName });
+            playTone(400, 'sine', 0.1);
         }
 
-        function startGame() {
-            socket.emit('startGame', currentRoom);
-        }
+        function startGame() { socket.emit('startGame', currentRoom); }
 
         socket.on('roomUpdated', (room) => {
             document.getElementById('roomInfo').style.display = 'block';
             document.getElementById('currentRoomId').innerText = room.id;
             const list = document.getElementById('playerList');
-            list.innerHTML = room.players.map(p => `<div class="player-item"><span>${p.name}</span> <span>${p.score} PTS</span></div>`).join('');
-            
-            if(isHost && room.players.length >= 1) {
-                document.getElementById('startBtn').style.display = 'block';
-            }
-            
+            list.innerHTML = room.players.map(p => `
+                <div class="player-item"><span>${p.name}</span><span style="color:var(--pop-yellow)">${p.score}</span></div>
+            `).join('');
+            if(isHost) document.getElementById('startBtn').style.display = 'block';
             updateLeaderboard(room.players);
         });
 
         socket.on('gameStarted', (room) => {
             document.getElementById('lobby').style.display = 'none';
             document.getElementById('game-arena').style.display = 'block';
-            document.getElementById('leaderboard').style.display = 'block';
             loadQuestion();
         });
 
         const questData = [
-            { q: "What is the cube root of 27?", a: "3", o: ["3","9","6","1"] },
-            { q: "Which element has symbol 'Au'?", a: "Gold", o: ["Silver","Gold","Copper","Iron"] },
+            { q: "Cube root of 27?", a: "3", o: ["3","9","6","1"] },
+            { q: "Symbol of Gold?", a: "Au", o: ["Ag","Au","Cu","Fe"] },
             { q: "Capital of India?", a: "New Delhi", o: ["Mumbai","New Delhi","Pune","Delhi"] },
             { q: "Father of AI?", a: "Alan Turing", o: ["Jobs","Elon","Alan Turing","Gates"] }
         ];
@@ -208,8 +275,8 @@
 
         function loadQuestion() {
             if(qIndex >= questData.length) {
-                document.getElementById('question').innerText = "Battle Finished! Check Rankings.";
-                document.getElementById('options').innerHTML = "";
+                document.getElementById('question').innerText = "FINISHED!";
+                document.getElementById('options').innerHTML = `<button class="btn-green" style="width:100%" onclick="location.reload()">PLAY AGAIN</button>`;
                 return;
             }
             const data = questData[qIndex];
@@ -220,10 +287,11 @@
                 const btn = document.createElement('button');
                 btn.innerText = opt;
                 btn.onclick = () => {
-                    const correct = (opt === data.a);
-                    socket.emit('submitAnswer', { roomId: currentRoom, playerName: myName, isCorrect: correct });
+                    const c = (opt === data.a);
+                    socket.emit('submitAnswer', { roomId: currentRoom, playerName: myName, isCorrect: c });
                     qIndex++;
                     loadQuestion();
+                    playTone(c?800:200, c?'sine':'sawtooth', 0.1);
                 };
                 grid.appendChild(btn);
             });
@@ -231,11 +299,25 @@
 
         function updateLeaderboard(players) {
             const board = document.getElementById('rankings');
-            board.innerHTML = players.sort((a,b) => b.score - a.score).map(p => `<div>${p.name}: ${p.score}</div>`).join('');
+            board.innerHTML = players.sort((a,b)=>b.score - a.score).map(p => `
+                <div><span>${p.name}</span><span>${p.score}</span></div>
+            `).join('');
+        }
+
+        let audioCtx;
+        function playTone(freq, type, dur) {
+            if(!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+            if(audioCtx.state === 'suspended') audioCtx.resume();
+            let o = audioCtx.createOscillator();
+            let g = audioCtx.createGain();
+            o.connect(g); g.connect(audioCtx.destination);
+            o.type = type; o.frequency.setValueAtTime(freq, audioCtx.currentTime);
+            g.gain.setValueAtTime(0.1, audioCtx.currentTime);
+            g.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + dur);
+            o.start(); o.stop(audioCtx.currentTime + dur);
         }
 
         socket.on('error', (msg) => alert(msg));
-
     </script>
 </body>
 </html>

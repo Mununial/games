@@ -6,201 +6,195 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>ବିଏସଇ ଓଡିଶା ଗେମ ଶିକ୍ଷା (BSE Odisha Learning)</title>
     <!-- Use Google Fonts for better Odia rendering and English fallback -->
-    <link
-        href="https://fonts.googleapis.com/css2?family=Mukta+Malar:wght@400;700&family=Nunito:wght@400;700;900&display=swap"
-        rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Mukta+Malar:wght@400;700&family=Nunito:wght@400;700;900&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-
+    <link rel="stylesheet" href="doodle.css">
     <style>
-        :root {
-            --primary: #c026d3;
-            /* Vibrant purple-pink */
-            --primary-hover: #a21caf;
-            --bg: #fdf4ff;
-            --card-bg: #ffffff;
-            --text: #4a044e;
-            --muted: #86198f;
-        }
-
         body {
             margin: 0;
-            background: var(--bg);
-            color: var(--text);
-            font-family: 'Mukta Malar', 'Nunito', sans-serif;
-            overflow-x: hidden;
+            padding: 0;
+            min-height: 100vh;
+            font-family: 'Outfit', 'Mukta Malar', sans-serif;
+        }
+
+        .container {
+            max-width: 1100px;
+            margin: 30px auto;
+            padding: 0 25px 60px;
+            position: relative;
+            z-index: 10;
         }
 
         nav {
             display: flex;
             justify-content: space-between;
             align-items: center;
-            padding: 20px 40px;
-            background: rgba(255, 255, 255, 0.8);
-            backdrop-filter: blur(10px);
-            border-bottom: 2px solid #f5d0fe;
-            position: sticky;
-            top: 0;
-            z-index: 50;
+            padding: 24px 40px;
+            background: var(--card-bg);
+            backdrop-filter: blur(20px);
+            border-bottom: var(--sketch-border);
+            position: sticky; top: 0;
+            z-index: 1000;
+            box-shadow: var(--soft-shadow);
         }
 
         .logo {
-            font-size: 1.8rem;
-            font-weight: 700;
-            color: var(--primary);
+            font-size: 1.6rem;
+            font-weight: 900;
+            color: var(--text-main);
             display: flex;
             align-items: center;
-            gap: 10px;
+            gap: 12px;
+            text-shadow: 2px 2px 0 white;
+        }
+
+        .logo i {
+            color: var(--primary);
         }
 
         .hud {
             display: flex;
-            gap: 20px;
+            gap: 15px;
             align-items: center;
         }
 
         .coin-badge {
-            background: #fef08a;
+            background: white;
             color: #854d0e;
-            padding: 5px 15px;
+            padding: 10px 24px;
             border-radius: 50px;
-            font-weight: bold;
-            font-size: 1.2rem;
+            font-weight: 900;
+            font-size: 1.1rem;
             display: flex;
             align-items: center;
-            gap: 5px;
-            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
+            gap: 8px;
+            border: var(--sketch-border);
+            box-shadow: 4px 4px 0px #334155;
         }
 
         .container {
-            max-width: 1200px;
-            margin: 40px auto;
-            padding: 0 20px;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
+            max-width: 1100px;
+            margin: 30px auto;
+            padding: 0 25px 60px;
         }
 
         .header-section {
             text-align: center;
-            margin-bottom: 40px;
+            margin-bottom: 50px;
+            animation: fadeIn 0.8s ease-out;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
         }
 
         .header-section h1 {
-            font-size: 3rem;
-            margin: 0 0 10px 0;
-            color: var(--text);
-            text-shadow: 2px 2px 0px #f5d0fe;
+            font-size: clamp(2.2rem, 5vw, 3.5rem);
+            margin: 0 0 15px 0;
+            font-weight: 900;
+            color: var(--text-main);
+            text-shadow: 3px 3px 0 white;
         }
 
         .header-section p {
-            font-size: 1.2rem;
-            color: var(--muted);
+            font-size: 1.25rem;
+            color: var(--text-muted);
             margin: 0;
+            font-weight: 700;
         }
 
         .view-section {
             display: none;
             width: 100%;
-            animation: fadeIn 0.5s ease;
         }
 
         .view-section.active {
             display: block;
+            animation: slideUp 0.6s cubic-bezier(0.4, 0, 0.2, 1);
         }
 
-        @keyframes fadeIn {
-            from {
-                opacity: 0;
-                transform: translateY(10px);
-            }
-
-            to {
-                opacity: 1;
-                transform: translateY(0);
-            }
+        @keyframes slideUp {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
         }
 
         .grid {
             display: grid;
             grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
-            gap: 20px;
+            gap: 25px;
             width: 100%;
-            justify-items: center;
         }
 
         .card {
             background: var(--card-bg);
-            border: 2px solid #f5d0fe;
-            border-radius: 20px;
-            padding: 30px 20px;
-            width: 100%;
-            max-width: 250px;
+            border: var(--sketch-border);
+            border-radius: 24px 22px 28px 20px;
+            padding: 35px 25px;
             text-align: center;
             cursor: pointer;
-            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-            box-shadow: 0 10px 15px -3px rgba(192, 38, 211, 0.1);
-            position: relative;
-            overflow: hidden;
+            transition: var(--transition);
+            box-shadow: 8px 8px 0px rgba(0, 0, 0, 0.05);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 15px;
         }
 
         .card:hover {
-            transform: translateY(-5px) scale(1.02);
-            box-shadow: 0 20px 25px -5px rgba(192, 38, 211, 0.2);
+            transform: translateY(-8px) rotate(1deg);
             border-color: var(--primary);
         }
 
         .card.disabled {
-            opacity: 0.6;
+            opacity: 0.5;
             cursor: not-allowed;
-            filter: grayscale(0.8);
-        }
-
-        .card.disabled:hover {
-            transform: none;
-            box-shadow: 0 10px 15px -3px rgba(192, 38, 211, 0.1);
-            border-color: #f5d0fe;
-        }
-
-        .card.disabled::after {
-            content: 'Coming Soon';
-            position: absolute;
-            bottom: 10px;
-            left: 50%;
-            transform: translateX(-50%);
-            background: #94a3b8;
-            color: white;
-            padding: 2px 10px;
-            border-radius: 10px;
-            font-size: 0.8rem;
-            font-weight: bold;
-            width: max-content;
+            filter: grayscale(0.5);
+            background: #f1f5f9;
         }
 
         .card-icon {
-            font-size: 3rem;
-            margin-bottom: 15px;
+            font-size: 3.5rem;
             color: var(--primary);
+            width: 90px;
+            height: 90px;
+            background: white;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: var(--transition);
+            border: var(--sketch-border);
+            box-shadow: 4px 4px 0px #334155;
+        }
+
+        .card:hover .card-icon {
+            background: var(--primary);
+            color: white;
+            transform: scale(1.1) rotate(5deg);
         }
 
         .card-title {
-            font-size: 1.5rem;
-            font-weight: 700;
+            font-size: 1.6rem;
+            font-weight: 900;
             margin: 0;
+            line-height: 1.3;
+            color: var(--text-main);
+            text-shadow: 1px 1px 0 white;
         }
 
         .card-sub {
             font-size: 1rem;
-            color: var(--muted);
-            margin-top: 5px;
+            color: var(--text-muted);
+            font-weight: 800;
         }
 
-        /* Chapters Layout - horizontal list style */
         .chapter-list {
             display: flex;
             flex-direction: column;
-            gap: 15px;
+            gap: 20px;
             width: 100%;
-            max-width: 800px;
+            max-width: 850px;
             margin: 0 auto;
         }
 
@@ -208,67 +202,74 @@
             display: flex;
             justify-content: space-between;
             align-items: center;
-            background: white;
-            padding: 20px 30px;
-            border-radius: 15px;
-            border: 2px solid #f5d0fe;
+            background: var(--card-bg);
+            padding: 25px 35px;
+            border-radius: 20px 18px 22px 19px;
+            border: var(--sketch-border);
             cursor: pointer;
-            transition: 0.2s;
-            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
+            transition: var(--transition);
+            box-shadow: 6px 6px 0px rgba(0, 0, 0, 0.05);
+            gap: 20px;
         }
 
         .chapter-card:hover {
-            transform: scale(1.01);
+            transform: scale(1.02) rotate(-0.5deg);
             border-color: var(--primary);
         }
 
         .chapter-card.disabled {
-            opacity: 0.6;
+            opacity: 0.5;
             cursor: not-allowed;
-            filter: grayscale(1);
+            background: #f1f5f9;
         }
 
         .chapter-info h3 {
             margin: 0 0 5px 0;
-            font-size: 1.4rem;
+            font-size: 1.5rem;
+            font-weight: 900;
+            color: var(--text-main);
         }
 
         .chapter-info p {
             margin: 0;
-            color: var(--muted);
+            color: var(--text-muted);
+            font-weight: 800;
         }
 
         .btn-play-sm {
             background: var(--primary);
             color: white;
-            border: none;
-            padding: 10px 20px;
+            border: var(--sketch-border);
+            padding: 12px 25px;
             border-radius: 50px;
-            font-weight: bold;
-            font-family: 'Mukta Malar', sans-serif;
+            font-weight: 900;
             cursor: pointer;
+            font-size: 1rem;
+            transition: var(--transition);
+            white-space: nowrap;
+            box-shadow: 4px 4px 0px #334155;
         }
 
-        .chapter-card:hover .btn-play-sm {
-            background: var(--primary-hover);
+        .btn-play-sm:hover {
+            transform: scale(1.05);
+            background: var(--accent);
         }
 
         .btn-back {
-            background: transparent;
+            background: white;
             color: var(--primary);
-            border: none;
-            font-size: 1.2rem;
-            font-weight: bold;
+            border: var(--sketch-border);
+            font-size: 1.1rem;
+            font-weight: 900;
             cursor: pointer;
-            display: flex;
-            align-items: center;
-            gap: 10px;
-            margin-bottom: 30px;
-            padding: 10px 20px;
-            border-radius: 50px;
-            transition: 0.2s;
             display: none;
-            margin-right: auto;
+            align-items: center;
+            gap: 12px;
+            margin-bottom: 40px;
+            padding: 12px 25px;
+            border-radius: 50px;
+            transition: var(--transition);
+            box-shadow: 4px 4px 0px #334155;
         }
 
         .btn-back.visible {
@@ -276,8 +277,18 @@
         }
 
         .btn-back:hover {
-            background: #fae8ff;
+            transform: scale(1.05) rotate(-1deg);
+            background: var(--primary);
+            color: white;
         }
+
+        @media (max-width: 768px) {
+            nav { padding: 15px 20px; }
+            .logo { font-size: 1.3rem; }
+            .chapter-card { flex-direction: column; text-align: center; padding: 25px; }
+            .btn-play-sm { width: 100%; }
+        }
+
     </style>
 </head>
 

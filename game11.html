@@ -1,0 +1,456 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Yoga Master AI - 3D Ultra Pro</title>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;700;900&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <!-- MediaPipe Pose -->
+    <script src="https://cdn.jsdelivr.net/npm/@mediapipe/pose/pose.js" crossorigin="anonymous"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@mediapipe/camera_utils/camera_utils.js" crossorigin="anonymous"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/gsap.min.js"></script>
+    
+    <style>
+        :root {
+            --zen-mint: #10b981;
+            --zen-blue: #0ea5e9;
+            --zen-purple: #8b5cf6;
+            --glass: rgba(255, 255, 255, 0.1);
+        }
+
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+
+        body {
+            font-family: 'Outfit', sans-serif;
+            background: #0f172a;
+            height: 100vh;
+            overflow: hidden;
+            color: white;
+            display: flex;
+            flex-direction: column;
+        }
+
+        /* 3D Moving Ambient BG */
+        #bg-canvas {
+            position: fixed;
+            inset: 0;
+            z-index: -1;
+            background: radial-gradient(circle at 20% 20%, #064e3b 0%, transparent 40%),
+                        radial-gradient(circle at 80% 80%, #1e1b4b 0%, transparent 40%);
+        }
+
+        nav {
+            padding: 20px 40px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            background: rgba(15, 23, 42, 0.5);
+            backdrop-filter: blur(20px);
+            border-bottom: 1px solid rgba(255,255,255,0.1);
+        }
+
+        .logo { font-weight: 900; font-size: 1.5rem; letter-spacing: 1px; display: flex; align-items: center; gap: 10px; }
+        .logo i { color: var(--zen-mint); text-shadow: 0 0 15px var(--zen-mint); }
+
+        .btn-exit {
+            background: rgba(255,255,255,0.1); border: 1px solid rgba(255,255,255,0.2);
+            color: white; padding: 10px 20px; border-radius: 50px; cursor: pointer;
+            font-weight: 800; transition: 0.3s; text-decoration: none;
+        }
+        .btn-exit:hover { background: #ef4444; border-color: #ef4444; transform: scale(1.05); }
+
+        main {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+            gap: 20px;
+            position: relative;
+        }
+
+        /* 3D Camera Container */
+        .camera-wrapper {
+            position: relative;
+            width: 100%;
+            max-width: 800px;
+            aspect-ratio: 16/9;
+            background: #000;
+            border-radius: 30px;
+            border: 4px solid rgba(255,255,255,0.1);
+            overflow: hidden;
+            box-shadow: 0 0 50px rgba(0,0,0,0.5);
+            transform: perspective(1000px) rotateX(2deg);
+        }
+
+        #videoInput { display: none; }
+        #canvasOutput { width: 100%; height: 100%; transform: scaleX(-1); object-fit: cover; }
+
+        /* HUD elements */
+        .hud-overlay {
+            position: absolute;
+            inset: 0;
+            pointer-events: none;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+        }
+
+        .status-badge {
+            align-self: flex-end;
+            background: rgba(0,0,0,0.6);
+            padding: 8px 15px;
+            border-radius: 50px;
+            font-size: 0.7rem;
+            font-weight: 900;
+            border: 1px solid rgba(255,255,255,0.2);
+            color: var(--zen-mint);
+            display: flex; align-items: center; gap: 8px;
+        }
+        .status-badge i { animation: pulse 1s infinite; }
+
+        @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.5; } }
+
+        .pose-selector {
+            position: absolute;
+            bottom: 30px;
+            left: 50%;
+            transform: translateX(-50%);
+            display: flex;
+            gap: 20px;
+            pointer-events: all;
+            background: rgba(0,0,0,0.4);
+            padding: 15px;
+            border-radius: 30px;
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255,255,255,0.1);
+        }
+
+        .pose-btn {
+            background: var(--glass);
+            border: 1px solid rgba(255,255,255,0.2);
+            padding: 10px;
+            border-radius: 20px;
+            color: white;
+            cursor: pointer;
+            font-weight: 700;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 8px;
+            transition: 0.3s;
+            width: 120px;
+        }
+
+        .pose-btn img {
+            width: 80px;
+            height: 80px;
+            border-radius: 12px;
+            object-fit: cover;
+            border: 1px solid rgba(255,255,255,0.1);
+        }
+
+        .pose-btn span {
+            font-size: 0.7rem;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .pose-btn.active {
+            background: var(--zen-mint);
+            border-color: var(--zen-mint);
+            box-shadow: 0 0 20px rgba(16, 185, 129, 0.4);
+        }
+        .pose-btn.active img {
+            border-color: white;
+        }
+
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 20px;
+            width: 100%;
+            max-width: 800px;
+        }
+
+        .stat-card {
+            background: var(--glass);
+            backdrop-filter: blur(20px);
+            border: 1px solid rgba(255,255,255,0.1);
+            padding: 20px;
+            border-radius: 24px;
+            text-align: center;
+        }
+
+        .stat-card h4 { font-size: 0.7rem; text-transform: uppercase; color: #94a3b8; margin-bottom: 5px; letter-spacing: 1px; }
+        .stat-card .value { font-size: 2rem; font-weight: 900; color: var(--zen-blue); }
+
+        /* Floating Message */
+        #hint-text {
+            background: rgba(16, 185, 129, 0.9);
+            color: white;
+            padding: 10px 25px;
+            border-radius: 50px;
+            font-weight: 800;
+            position: absolute;
+            top: 20%;
+            opacity: 0;
+            transform: translateY(20px);
+            box-shadow: 0 10px 20px rgba(0,0,0,0.2);
+        }
+
+        /* Starting Loader */
+        #loader {
+            position: fixed; inset: 0;
+            background: #0f172a;
+            z-index: 2000;
+            display: flex; flex-direction: column; align-items: center; justify-content: center;
+            text-align: center;
+        }
+
+        .loader-spinner {
+            width: 80px; height: 80px;
+            border: 8px solid rgba(255,255,255,0.1);
+            border-top-color: var(--zen-mint);
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin-bottom: 20px;
+        }
+
+        @keyframes spin { to { transform: rotate(360deg); } }
+
+        @media (max-width: 768px) {
+            nav { padding: 15px 20px; }
+            .stats-grid { gap: 10px; }
+            .stat-card { padding: 15px; }
+            .stat-card .value { font-size: 1.2rem; }
+        }
+    </style>
+</head>
+<body>
+    <div id="bg-canvas"></div>
+
+    <nav>
+        <div class="logo"><i class="fa-solid fa-peace"></i> YOGA MASTER AI 3D</div>
+        <a href="index.html" class="btn-exit"><i class="fa-solid fa-house"></i> EXIT</a>
+    </nav>
+
+    <main>
+        <div id="hint-text">ALIGNMENT PERFECT! +500</div>
+
+        <div class="camera-wrapper">
+            <video id="videoInput"></video>
+            <canvas id="canvasOutput"></canvas>
+            
+            <div class="hud-overlay">
+                <div class="status-badge" id="status-badge">
+                    <i class="fa-solid fa-circle"></i> AI SENSORS ACTIVE
+                </div>
+            </div>
+
+            <div class="pose-selector">
+                <button class="pose-btn active" onclick="setPose(0)">
+                    <img src="assets/tree.png" alt="Tree Pose">
+                    <span>TREE POSE</span>
+                </button>
+                <button class="pose-btn" onclick="setPose(1)">
+                    <img src="assets/warrior.png" alt="Warrior II">
+                    <span>WARRIOR II</span>
+                </button>
+                <button class="pose-btn" onclick="setPose(2)">
+                    <img src="assets/lotus.png" alt="Lotus Pose">
+                    <span>LOTUS</span>
+                </button>
+            </div>
+        </div>
+
+        <div class="stats-grid">
+            <div class="stat-card">
+                <h4>ZEN SCORE</h4>
+                <div class="value" id="score">0</div>
+            </div>
+            <div class="stat-card">
+                <h4>POSTURE SYNC</h4>
+                <div class="value" id="sync">0%</div>
+            </div>
+            <div class="stat-card">
+                <h4>CALORIES</h4>
+                <div class="value" id="cals">0.0</div>
+            </div>
+        </div>
+    </main>
+
+    <div id="loader">
+        <div class="loader-spinner"></div>
+        <h2 style="font-weight: 900; letter-spacing: 2px;">CALIBRATING VISION AI...</h2>
+        <p style="opacity: 0.6; margin-top: 10px;">Please allow camera access and stand back.</p>
+    </div>
+
+    <script>
+        const videoElement = document.getElementById('videoInput');
+        const canvasElement = document.getElementById('canvasOutput');
+        const canvasCtx = canvasElement.getContext('2d');
+        
+        let score = 0;
+        let health = 0;
+        let currentSync = 0;
+        let curPose = 0;
+        let systemReady = false;
+
+        const POSES = [
+            { name: "Tree", target: [110, 160, 165] }, // Angles for body parts (simplified)
+            { name: "Warrior", target: [180, 180, 90] },
+            { name: "Lotus", target: [90, 90, 180] }
+        ];
+
+        function onResults(results) {
+            if (!systemReady) {
+                systemReady = true;
+                document.getElementById('loader').style.display = 'none';
+            }
+
+            canvasCtx.save();
+            canvasCtx.clearRect(0, 0, canvasElement.width, canvasElement.height);
+            canvasCtx.drawImage(results.image, 0, 0, canvasElement.width, canvasElement.height);
+
+            if (results.poseLandmarks) {
+                // Draw AI Skeleton with 3D feel
+                drawSkeleton(results.poseLandmarks);
+                
+                // Logic to calculate "Sync" percentage based on landmark locations
+                calculateSync(results.poseLandmarks);
+            }
+            canvasCtx.restore();
+        }
+
+        function drawSkeleton(landmarks) {
+            canvasCtx.lineWidth = 5;
+            canvasCtx.strokeStyle = '#10b981';
+            canvasCtx.fillStyle = '#fff';
+
+            // Connect lines (simplified)
+            const connections = [
+                [11, 12], [11, 13], [13, 15], [12, 14], [14, 16], // Upper body
+                [11, 23], [12, 24], [23, 24], // Torso
+                [23, 25], [25, 27], [24, 26], [26, 28] // Lower body
+            ];
+
+            connections.forEach(([i, j]) => {
+                const a = landmarks[i];
+                const b = landmarks[j];
+                canvasCtx.beginPath();
+                canvasCtx.moveTo(a.x * canvasElement.width, a.y * canvasElement.height);
+                canvasCtx.lineTo(b.x * canvasElement.width, b.y * canvasElement.height);
+                canvasCtx.stroke();
+            });
+
+            // Draw joints as glowing orbs
+            landmarks.forEach((pt, i) => {
+                if (i < 11 || i > 28) return; // Only main body
+                canvasCtx.beginPath();
+                canvasCtx.arc(pt.x * canvasElement.width, pt.y * canvasElement.height, 5, 0, 2 * Math.PI);
+                canvasCtx.fill();
+            });
+        }
+
+        function calculateSync(landmarks) {
+            // Calculate a simple mock sync based on movement (Real AI Logic would check angles)
+            // For now, let's make it more reactive than a timer
+            const nose = landmarks[0];
+            const lHand = landmarks[15];
+            const rHand = landmarks[16];
+
+            let targetSync = 0;
+            if (curPose === 0) { // Tree Pose: Hands high
+                 targetSync = (1 - lHand.y) * 50 + (1 - rHand.y) * 50;
+            } else if (curPose === 1) { // Warrior: Hands wide
+                 targetSync = Math.abs(lHand.x - rHand.x) * 100;
+            } else {
+                 targetSync = (lHand.y + rHand.y) * 50;
+            }
+
+            targetSync = Math.min(100, Math.max(0, targetSync));
+            
+            // Smoothly lerp the sync value
+            currentSync += (targetSync - currentSync) * 0.1;
+            document.getElementById('sync').innerText = Math.floor(currentSync) + "%";
+
+            if (currentSync > 80) {
+                updateScore(1);
+                document.getElementById('sync').style.color = '#10b981';
+            } else {
+                document.getElementById('sync').style.color = '#0ea5e9';
+            }
+        }
+
+        function updateScore(amt) {
+            score += amt;
+            document.getElementById('score').innerText = score;
+            document.getElementById('cals').innerText = (score * 0.05).toFixed(1);
+
+            if (score % 500 === 0) {
+                gsap.to('#hint-text', { opacity: 1, y: 0, duration: 0.5 });
+                gsap.to('#hint-text', { opacity: 0, y: 20, delay: 2, duration: 0.5 });
+                // Sync to DB
+                syncPoints(500);
+            }
+        }
+
+        function setPose(i) {
+            curPose = i;
+            document.querySelectorAll('.pose-btn').forEach((b, idx) => {
+                b.classList.toggle('active', idx === i);
+            });
+            currentSync = 0;
+        }
+
+        function syncPoints(pts) {
+            const uid = localStorage.getItem('qrio_active_id');
+            if (uid) {
+                fetch('/api/points', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ userId: uid, pointsToAdd: pts })
+                }).catch(e => console.error(e));
+            }
+        }
+
+        // Initialize MediaPipe Pose
+        const pose = new Pose({
+            locateFile: (file) => `https://cdn.jsdelivr.net/npm/@mediapipe/pose/${file}`
+        });
+
+        pose.setOptions({
+            modelComplexity: 1,
+            smoothLandmarks: true,
+            minDetectionConfidence: 0.5,
+            minTrackingConfidence: 0.5
+        });
+
+        pose.onResults(onResults);
+
+        const camera = new Camera(videoElement, {
+            onFrame: async () => {
+                await pose.send({image: videoElement});
+            },
+            width: 1280,
+            height: 720
+        });
+
+        camera.start();
+
+        // Canvas sizing
+        function resize() {
+            canvasElement.width = canvasElement.offsetWidth;
+            canvasElement.height = canvasElement.offsetHeight;
+        }
+        window.addEventListener('resize', resize);
+        resize();
+
+    </script>
+</body>
+</html>

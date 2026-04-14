@@ -5,136 +5,183 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Light Puzzle - BSE Odisha</title>
-    <link href="https://fonts.googleapis.com/css2?family=Mukta+Malar:wght@400;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Mukta+Malar:wght@400;700&family=Outfit:wght@400;700;900&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="doodle.css">
     <style>
-        body {
+        body, html {
             margin: 0;
-            background: #1e1b4b;
-            color: white;
+            padding: 0;
+            width: 100%;
+            height: 100%;
+            overflow-x: hidden;
             display: flex;
             flex-direction: column;
             align-items: center;
             justify-content: center;
-            height: 100vh;
-            font-family: 'Mukta Malar', sans-serif;
-            overflow: hidden;
+        }
+
+        .doodle-page {
+            width: 100%;
+            height: 100%;
         }
 
         h1 {
+            font-size: 2.5rem;
+            font-weight: 900;
             margin: 0 0 10px 0;
-            color: #facc15;
+            color: var(--text-main);
+            text-shadow: 2px 2px 0 white;
+            text-align: center;
         }
 
         p {
             margin: 0 0 30px 0;
-            font-size: 1.2rem;
+            font-size: 1.25rem;
+            font-weight: 700;
+            color: var(--text-muted);
+            text-align: center;
         }
 
         .grid {
             display: grid;
             grid-template-columns: repeat(4, 100px);
             grid-template-rows: repeat(4, 100px);
-            gap: 5px;
-            background: rgba(0, 0, 0, 0.5);
-            padding: 10px;
-            border-radius: 10px;
-            box-shadow: 0 0 20px rgba(250, 204, 21, 0.2);
+            gap: 8px;
+            background: var(--card-bg);
+            padding: 15px;
+            border-radius: 20px;
+            border: var(--sketch-border);
+            box-shadow: var(--soft-shadow);
+            backdrop-filter: blur(20px);
         }
 
         .cell {
             width: 100px;
             height: 100px;
-            background: rgba(255, 255, 255, 0.1);
-            border-radius: 5px;
+            background: rgba(255, 255, 255, 0.5);
+            border-radius: 12px;
             display: flex;
             align-items: center;
             justify-content: center;
             position: relative;
+            border: 1px solid rgba(0,0,0,0.05);
         }
 
         .mirror {
             width: 60px;
             height: 60px;
-            background: #94a3b8;
-            border: 2px solid white;
+            background: #cbd5e1;
+            border: var(--sketch-border);
             cursor: pointer;
-            transition: transform 0.3s;
+            transition: transform 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
             position: relative;
+            box-shadow: 4px 4px 0px rgba(0, 0, 0, 0.1);
+            border-radius: 12px;
         }
 
-        /* Line indicating reflective side */
         .mirror::after {
             content: '';
             position: absolute;
             top: -2px;
             left: -2px;
-            width: 64px;
-            height: 5px;
+            width: 60px;
+            height: 6px;
             background: #38bdf8;
             box-shadow: 0 0 10px #38bdf8;
+            border-radius: 50px;
         }
 
         .emitter {
-            font-size: 2rem;
+            font-size: 2.5rem;
+            filter: drop-shadow(4px 4px 0px rgba(0,0,0,0.1));
         }
 
         .target {
-            font-size: 2rem;
+            font-size: 2.5rem;
             filter: grayscale(1);
             transition: 0.5s;
         }
 
         .target.lit {
             filter: grayscale(0);
-            text-shadow: 0 0 20px #facc15;
+            text-shadow: 0 0 20px var(--primary);
+            transform: scale(1.2) rotate(10deg);
         }
 
         .laser {
             position: absolute;
             background: #ef4444;
             z-index: 10;
-            box-shadow: 0 0 10px #ef4444;
-            transform-origin: top left;
+            box-shadow: 0 0 15px #ef4444;
+            transform-origin: center left;
             transition: width 0.3s;
+            height: 6px !important;
+            border-radius: 50px;
         }
 
         .btn {
-            background: #eab308;
+            background: var(--primary);
             color: #422006;
-            border: none;
-            padding: 10px 30px;
+            border: var(--sketch-border);
+            padding: 15px 40px;
             border-radius: 50px;
-            font-size: 1.2rem;
-            font-weight: bold;
+            font-size: 1.25rem;
+            font-weight: 900;
             cursor: pointer;
             margin-top: 30px;
-            font-family: 'Mukta Malar';
+            transition: var(--transition);
+            box-shadow: 6px 6px 0px #334155;
+            text-transform: uppercase;
         }
 
         .btn:hover {
-            background: #facc15;
+            transform: scale(1.05) rotate(1deg);
+            background: #fdf08a;
         }
 
         .win-overlay {
             position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background: rgba(30, 27, 75, 0.95);
+            inset: 0;
+            background: rgba(224, 242, 254, 0.95);
+            backdrop-filter: blur(20px);
             display: none;
             flex-direction: column;
             justify-content: center;
             align-items: center;
-            z-index: 100;
+            z-index: 1000;
             text-align: center;
+            padding: 40px;
         }
 
         .win-overlay h2 {
             font-size: 4rem;
-            color: #facc15;
+            font-weight: 900;
+            color: var(--text-main);
             margin: 0;
+            text-shadow: 3px 3px 0 white;
         }
+
+        .btn-exit {
+            position: absolute;
+            top: 24px;
+            right: 24px;
+            background: white;
+            border: var(--sketch-border);
+            color: var(--primary);
+            padding: 10px 24px;
+            border-radius: 50px;
+            font-weight: 900;
+            cursor: pointer;
+            transition: var(--transition);
+            box-shadow: 4px 4px 0px #334155;
+        }
+
+        .btn-exit:hover {
+            transform: scale(1.05) rotate(-2deg);
+            background: #fdf08a;
+        }
+
     </style>
 </head>
 
@@ -266,7 +313,7 @@
         }
 
         function awardPoints() {
-            let activeId = localStorage.getItem('QRIO_active_id');
+            let activeId = localStorage.getItem('qrio_active_id');
             if (activeId) {
                 fetch('/api/points', {
                     method: 'POST',

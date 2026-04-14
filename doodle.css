@@ -1,0 +1,222 @@
+:root {
+    --pastel-blue: #e0f2fe;
+    --pastel-lavender: #f3e8ff;
+    --pastel-yellow: #fef9c3;
+    --pastel-pink: #fdf2f8;
+    --doodle-primary: #818cf8;
+    --doodle-secondary: #ec4899;
+    --doodle-accent: #fbbf24;
+    --doodle-text: #1e293b;
+    --doodle-text-muted: #64748b;
+    --sketch-border-color: #334155;
+    --sketch-border: 2px solid var(--sketch-border-color);
+    --sketch-border-thin: 1.5px solid var(--sketch-border-color);
+    --card-radius: 20px;
+    --btn-radius: 50px;
+    --transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+    --doodle-bg: linear-gradient(135deg, var(--pastel-blue) 0%, var(--pastel-lavender) 100%);
+    --doodle-card-bg: #ffffff;
+}
+
+[data-theme="dark"] {
+    --pastel-blue: #0f172a;
+    --pastel-lavender: #1e1b4b;
+    --pastel-yellow: #1e293b;
+    --pastel-pink: #312e81;
+    --doodle-text: #f8fafc;
+    --doodle-text-muted: #94a3b8;
+    --sketch-border-color: rgba(255,255,255,0.2);
+    --doodle-bg: linear-gradient(135deg, #020617 0%, #0f172a 100%);
+    --doodle-card-bg: rgba(30, 41, 59, 0.7);
+}
+
+#dashboardView, #authView, .doodle-page {
+    background: var(--doodle-bg) !important;
+    position: relative;
+    overflow-x: hidden;
+}
+
+#dashboardView::before, #authView::before, .doodle-page::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0; width: 100%; height: 100%;
+    opacity: 0.08;
+    pointer-events: none;
+    z-index: 0;
+    background-image: url("data:image/svg+xml,%3Csvg width='120' height='120' viewBox='0 0 120 120' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M10 10 Q 30 5, 40 20 T 70 10' fill='none' stroke='%23334155' stroke-width='2'/%3E%3Cpath d='M80 30 L 100 50 M 100 30 L 80 50' stroke='%23334155' stroke-width='2'/%3E%3Ccircle cx='50' cy='100' r='5' fill='none' stroke='%23334155' stroke-width='2'/%3E%3Cpath d='M100 90 L 110 100 M 110 90 L 100 100' stroke='%23334155' stroke-width='2'/%3E%3Cpath d='M10 110 C 20 100, 40 100, 50 110' fill='none' stroke='%23334155' stroke-width='2'/%3E%3C/svg%3E");
+}
+
+#dashboardView > *, #authView > *, .doodle-page > * {
+    position: relative;
+    z-index: 1;
+}
+
+/* Redesign Dashboard Elements */
+#dashboardView, #authView {
+    background: var(--doodle-bg) !important;
+}
+
+.dash-sidebar {
+    background: var(--doodle-card-bg) !important;
+    border-right: var(--sketch-border) !important;
+    border-radius: 0 24px 24px 0 !important;
+    backdrop-filter: blur(10px);
+}
+
+.side-tab-btn {
+    border-radius: var(--btn-radius) !important;
+    border: 2px solid transparent !important;
+    transition: var(--transition) !important;
+}
+
+.side-tab-btn.active {
+    background: var(--pastel-yellow) !important;
+    color: var(--doodle-text) !important;
+    border: var(--sketch-border) !important;
+    border-left: var(--sketch-border) !important; /* Keep it consistent */
+    box-shadow: 4px 4px 0px #334155;
+    transform: translate(-2px, -2px);
+}
+
+.mission-card, .game-card, .card {
+    background: var(--doodle-card-bg) !important;
+    border: var(--sketch-border) !important;
+    border-radius: var(--card-radius) !important;
+    box-shadow: 6px 6px 0px rgba(0, 0, 0, 0.05) !important;
+    transition: var(--transition) !important;
+}
+
+.mission-card:hover, .game-card:hover {
+    transform: translateY(-5px) scale(1.02) rotate(1deg) !important;
+    box-shadow: 10px 10px 0px rgba(0, 0, 0, 0.1) !important;
+}
+
+.btn-primary, .btn-submit, .btn-generate, .tab-btn.active {
+    background: var(--doodle-primary) !important;
+    border: var(--sketch-border) !important;
+    border-radius: var(--btn-radius) !important;
+    box-shadow: 4px 4px 0px #334155 !important;
+    color: white !important;
+    transition: var(--transition) !important;
+    padding: 12px 24px !important;
+    font-weight: 800 !important;
+}
+
+.btn-primary:hover, .btn-submit:hover, .btn-generate:hover {
+    transform: translate(-2px, -2px) !important;
+    box-shadow: 6px 6px 0px #334155 !important;
+}
+
+.tab-btn {
+    background: white !important;
+    border: var(--sketch-border-thin) !important;
+    border-radius: var(--btn-radius) !important;
+    color: var(--doodle-text-muted) !important;
+    margin: 0 5px;
+}
+
+.tab-btn.active {
+    background: var(--doodle-accent) !important;
+    color: var(--doodle-text) !important;
+}
+
+input, select, textarea {
+    border: var(--sketch-border-thin) !important;
+    border-radius: 12px !important;
+    padding: 12px 16px !important;
+    background: white !important;
+    transition: var(--transition) !important;
+}
+
+input:focus {
+    transform: scale(1.02);
+    border-color: var(--doodle-primary) !important;
+}
+
+/* Custom for index.html Dashboard */
+.dash-main {
+    padding: 40px !important;
+    background: transparent !important;
+}
+
+.side-hud > div {
+    background: var(--doodle-card-bg) !important;
+    border: var(--sketch-border) !important;
+    border-radius: 20px !important;
+    box-shadow: 6px 6px 0px rgba(0, 0, 0, 0.05) !important;
+}
+
+.difficulty-tag {
+    border-radius: 50px !important;
+    border: 1.5px solid currentColor !important;
+    font-weight: 900 !important;
+}
+
+/* Animations */
+@keyframes doodle-float {
+    0% { transform: translateY(0) rotate(0); }
+    50% { transform: translateY(-10px) rotate(1deg); }
+    100% { transform: translateY(0) rotate(0); }
+}
+
+.mission-card {
+    animation: none !important; /* Remove heavy animations */
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+    .dash-sidebar {
+        border-right: none !important;
+        border-bottom: var(--sketch-border) !important;
+    }
+}
+.btn-play-gaming, .btn-play-sm, button:not(.landing-btn):not(.side-tab-btn):not(.mobile-nav-btn):not(.mobile-only):not(.ai-action-btn) {
+    background: var(--doodle-primary) !important;
+    border: var(--sketch-border) !important;
+    border-radius: var(--btn-radius) !important;
+    box-shadow: 4px 4px 0px #334155 !important;
+    color: white !important;
+    transition: var(--transition) !important;
+    font-weight: 800 !important;
+    text-transform: uppercase !important;
+    letter-spacing: 1px !important;
+}
+
+.btn-play-gaming:hover, .btn-play-sm:hover, button:not(.landing-btn):not(.side-tab-btn):not(.mobile-nav-btn):not(.mobile-only):not(.ai-action-btn):hover {
+    transform: translate(-3px, -3px) rotate(-1deg) !important;
+    box-shadow: 7px 7px 0px #334155 !important;
+    background: var(--doodle-accent) !important;
+    color: var(--doodle-text) !important;
+}
+
+.mission-card img, .game-card img {
+    border-radius: 12px !important;
+    border: var(--sketch-border-thin) !important;
+    margin-bottom: 15px !important;
+}
+
+.mission-card h3, .game-card h3 {
+    font-weight: 900 !important;
+    color: var(--doodle-text) !important;
+}
+
+/* Auth View Special Treatment */
+#authView .auth-card {
+    background: white !important;
+    border: var(--sketch-border) !important;
+    border-radius: 24px !important;
+    padding: 3rem !important;
+    box-shadow: 10px 10px 0px rgba(0, 0, 0, 0.05) !important;
+}
+
+/* Sidebar Logo */
+.side-logo {
+    font-weight: 900 !important;
+    font-size: 1.5rem !important;
+    letter-spacing: -1px !important;
+    color: var(--doodle-text) !important;
+}
+
+.side-logo span {
+    color: var(--doodle-primary) !important;
+}

@@ -6,58 +6,106 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Mental Wellness World - SkillVerse</title>
     <style>
-        @import url('https://fonts.googleapis.com/css2?family=Quicksand:wght@400;700&display=swap');
+        @import url('https://fonts.googleapis.com/css2?family=Quicksand:wght@400;700&family=Outfit:wght@400;700;900&display=swap');
 
-        body {
+        @import url('https://fonts.googleapis.com/css2?family=Outfit:wght@400;700;900&display=swap');
+
+        :root {
+            --primary: #0ea5e9; /* Sky blue */
+            --zen-green: #10b981;
+            --bg-base: #f8fafc;
+            --pastel-blue: #e0f2fe;
+            --pastel-green: #f0fdf4;
+            --pastel-purple: #f3e8ff;
+            --card-bg: rgba(255, 255, 255, 0.85);
+            --text-main: #1e293b;
+            --text-muted: #64748b;
+            --sketch-border: 2px solid #334155;
+            --soft-shadow: 6px 6px 0px rgba(0, 0, 0, 0.05);
+            --transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        }
+
+        body, html {
             margin: 0;
-            background: #e0f2fe;
-            color: #0369a1;
-            font-family: 'Quicksand', sans-serif;
-            overflow: hidden;
+            padding: 0;
+            width: 100%;
+            height: 100%;
+            overflow-x: hidden;
             display: flex;
             flex-direction: column;
             align-items: center;
             justify-content: center;
-            height: 100vh;
-            transition: background 4s ease-in-out;
+            background: linear-gradient(135deg, var(--pastel-blue) 0%, var(--pastel-green) 100%);
+            color: var(--text-main);
+            font-family: 'Outfit', sans-serif;
+            transition: background 4s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        /* Doodle Pattern Overlay */
+        body::after {
+            content: '';
+            position: fixed;
+            top: 0; left: 0; width: 100%; height: 100%;
+            opacity: 0.04;
+            pointer-events: none;
+            z-index: -1;
+            background-image: url("data:image/svg+xml,%3Csvg width='120' height='120' viewBox='0 0 120 120' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M10 10 Q 30 5, 40 20 T 70 10' fill='none' stroke='%23334155' stroke-width='2'/%3E%3Ccircle cx='100' cy='30' r='5' fill='none' stroke='%23334155' stroke-width='2'/%3E%3Cpath d='M20 80 L 40 100 M 40 80 L 20 100' stroke='%23334155' stroke-width='2'/%3E%3C/svg%3E");
         }
 
         nav {
-            position: absolute;
-            top: 0;
-            width: 100%;
+            position: fixed;
+            top: 24px; left: 24px; right: 24px;
             display: flex;
             justify-content: space-between;
-            box-sizing: border-box;
-            padding: 20px 40px;
-        }
-
-        .btn-exit {
-            background: transparent;
-            color: #0284c7;
-            border: 2px solid #0284c7;
-            padding: 10px 20px;
+            align-items: center;
+            padding: 16px 32px;
+            background: var(--card-bg);
+            backdrop-filter: blur(20px);
+            border: var(--sketch-border);
             border-radius: 50px;
-            font-weight: bold;
-            cursor: pointer;
-            transition: 0.3s;
-            font-family: 'Quicksand';
+            z-index: 100;
+            box-shadow: var(--soft-shadow);
         }
 
-        .btn-exit:hover {
-            background: #0284c7;
-            color: white;
+        .nav-logo {
+            font-weight: 900;
+            font-size: 1.25rem;
+            color: var(--text-main);
+            display: flex;
+            align-items: center;
+            gap: 10px;
         }
 
         .hud {
-            font-size: 1.2rem;
-            font-weight: bold;
+            font-weight: 900;
+            color: var(--primary);
+            letter-spacing: 1px;
+            text-transform: uppercase;
+            font-size: 0.9rem;
+        }
+
+        .btn-exit {
+            background: white;
+            color: var(--text-main);
+            border: var(--sketch-border);
+            padding: 10px 20px;
+            border-radius: 50px;
+            font-weight: 900;
+            cursor: pointer;
+            transition: var(--transition);
+            box-shadow: 4px 4px 0px #334155;
+        }
+
+        .btn-exit:hover {
+            background: #ef4444;
+            color: white;
+            transform: rotate(-3deg) scale(1.05);
         }
 
         .circle-container {
             position: relative;
-            width: 300px;
-            height: 300px;
+            width: 320px;
+            height: 320px;
             display: flex;
             align-items: center;
             justify-content: center;
@@ -65,101 +113,90 @@
 
         .breathe-circle {
             position: absolute;
-            width: 100px;
-            height: 100px;
-            background: rgba(14, 165, 233, 0.2);
+            width: 120px;
+            height: 120px;
+            background: white;
+            border: var(--sketch-border); /* Sketch Border for the circle */
             border-radius: 50%;
-            box-shadow: 0 0 50px rgba(14, 165, 233, 0.5);
+            box-shadow: 0 0 40px rgba(14, 165, 233, 0.1);
             animation: breathe 8s infinite ease-in-out;
         }
 
         .center-dot {
-            width: 20px;
-            height: 20px;
-            background: #0284c7;
+            width: 24px;
+            height: 24px;
+            background: var(--primary);
             border-radius: 50%;
             z-index: 2;
-            box-shadow: 0 0 20px #0284c7;
+            box-shadow: 0 0 20px var(--primary);
         }
 
         @keyframes breathe {
-            0% {
-                transform: scale(1);
-                opacity: 0.6;
-            }
-
-            40% {
-                transform: scale(3);
-                opacity: 0.3;
-            }
-
-            /* Inhale */
-            50% {
-                transform: scale(3);
-                opacity: 0.3;
-            }
-
-            /* Hold */
-            90% {
-                transform: scale(1);
-                opacity: 0.6;
-            }
-
-            /* Exhale */
-            100% {
-                transform: scale(1);
-                opacity: 0.6;
-            }
-
-            /* Hold empty */
+            0% { transform: scale(1); opacity: 0.9; border-radius: 50%; }
+            40% { transform: scale(3.5); opacity: 0.4; border-radius: 48% 52% 50% 50% / 50% 50% 48% 52%; }
+            50% { transform: scale(3.5); opacity: 0.4; border-radius: 48% 52% 50% 50% / 50% 50% 48% 52%; }
+            90% { transform: scale(1); opacity: 0.9; border-radius: 50%; }
+            100% { transform: scale(1); opacity: 0.9; border-radius: 50%; }
         }
 
         h1 {
-            margin-top: 50px;
-            font-weight: 400;
-            letter-spacing: 2px;
-            text-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+            margin-top: 60px;
+            font-weight: 900;
+            font-size: 3rem;
+            letter-spacing: -1px;
+            color: var(--text-main);
+            text-align: center;
+            text-shadow: 2px 2px 0 white;
         }
 
         .instruction {
-            font-size: 1.2rem;
-            opacity: 0.8;
+            font-size: 1.1rem;
+            font-weight: 700;
+            opacity: 0.6;
+            margin-top: 10px;
+            text-align: center;
+            max-width: 400px;
+            color: var(--text-muted);
         }
 
         .game-over {
             position: fixed;
-            top: 0;
-            left: 0;
-            width: 100vw;
-            height: 100vh;
-            background: #f0fdf4;
-            z-index: 100;
-            display: flex;
+            inset: 0;
+            background: rgba(224, 242, 254, 0.95);
+            backdrop-filter: blur(40px);
+            z-index: 1000;
+            display: none;
             flex-direction: column;
             justify-content: center;
             align-items: center;
-            display: none;
+            text-align: center;
+            padding: 40px;
         }
 
         .game-over h1 {
-            color: #166534;
-            font-size: 3rem;
-            margin-bottom: 0;
+            color: var(--zen-green);
+            font-size: 4rem;
+            margin-bottom: 20px;
         }
 
-        .game-over p {
-            color: #15803d;
-            font-size: 1.5rem;
+        @media (max-width: 768px) {
+            nav { padding: 12px 20px; top: 12px; left: 12px; right: 12px;}
+            .nav-logo span { display: none; }
+            h1 { font-size: 2.22rem; }
+            .circle-container { width: 280px; height: 280px; }
+            .btn-exit { padding: 8px 16px; font-size: 0.8rem; }
         }
+
     </style>
 </head>
 
 <body>
     <nav>
-        <div style="font-weight: bold; font-size: 1.5rem;"><i class="fa-solid fa-leaf"></i> SkillVerse • Mental Wellness
+        <div class="nav-logo">
+            <i class="fa-solid fa-leaf"></i> <span>Qrio • Mental Wellness</span>
         </div>
         <div class="hud" id="hud">Zen Points: 0</div>
-        <button class="btn-exit" onclick="window.close()">Return to Center</button>
+        <button class="btn-exit" onclick="window.close()">Exit to HUB</button>
     </nav>
 
     <div class="circle-container">
@@ -209,7 +246,7 @@
                 score += 5;
                 document.getElementById('hud').innerText = "Zen Points: " + score;
 
-                let activeId = localStorage.getItem('QRIO_active_id');
+                let activeId = localStorage.getItem('qrio_active_id');
                 if (activeId) {
                     fetch('/api/points', {
                         method: 'POST',

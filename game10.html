@@ -1,286 +1,316 @@
 <!DOCTYPE html>
 <html lang="en">
-
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Cultural Canvas - QRIO</title>
+    <title>Qrio - Cultural Melody Hub</title>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;700;900&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/gsap.min.js"></script>
+
     <style>
-        @import url('https://fonts.googleapis.com/css2?family=Outfit:wght@400;700;900&display=swap');
+        :root {
+            --clay-gold: #fbbf24;
+            --clay-purple: #8b5cf6;
+            --clay-pink: #ec4899;
+            --glass: rgba(255, 255, 255, 0.05);
+            --glass-border: rgba(255, 255, 255, 0.1);
+        }
 
-        body {
-            margin: 0;
-            background: #fee2e2;
-            color: #881337;
-            font-family: 'Outfit', sans-serif;
+        body, html {
+            margin: 0; padding: 0;
+            width: 100%; height: 100%;
             overflow: hidden;
-            display: flex;
-            flex-direction: column;
-            height: 100vh;
-        }
-
-        nav {
-            display: flex;
-            justify-content: space-between;
-            padding: 20px 40px;
-            background: rgba(255, 255, 255, 0.7);
-            backdrop-filter: blur(10px);
-            border-bottom: 2px solid #fecdd3;
-        }
-
-        .hud {
-            display: flex;
-            gap: 30px;
-        }
-
-        .stat {
-            text-align: center;
-        }
-
-        .stat h3 {
-            color: #e11d48;
-            margin: 0;
-            font-size: 0.9rem;
-            text-transform: uppercase;
-        }
-
-        .stat p {
-            margin: 5px 0 0;
-            font-size: 1.5rem;
-            font-weight: bold;
-            color: #9f1239;
-        }
-
-        .btn-exit {
-            background: transparent;
-            color: #e11d48;
-            border: 2px solid #e11d48;
-            padding: 10px 20px;
-            border-radius: 50px;
-            font-weight: bold;
-            cursor: pointer;
-            transition: 0.3s;
-            font-family: 'Outfit';
-        }
-
-        .btn-exit:hover {
-            background: #e11d48;
+            background: #0f172a;
+            font-family: 'Outfit', sans-serif;
             color: white;
+            perspective: 1000px;
         }
 
-        .game-area {
-            flex: 1;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            padding: 20px;
+        /* 3D Animated Background */
+        .ambient-bg {
+            position: fixed; inset: 0;
+            background: radial-gradient(circle at 50% 50%, #1e1b4b 0%, #0f172a 100%);
+            z-index: -1;
         }
 
-        .artifact-card {
-            background: white;
-            padding: 40px;
-            border-radius: 20px;
-            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
-            text-align: center;
-            margin-bottom: 40px;
-            min-width: 400px;
-            border: 2px solid #fecdd3;
-        }
-
-        .artifact-card h2 {
-            font-size: 2.5rem;
-            color: #be123c;
-            margin: 0;
-        }
-
-        .artifact-card p {
-            font-size: 1.2rem;
-            color: #64748b;
-            margin-top: 10px;
-        }
-
-        .options {
-            display: flex;
-            gap: 20px;
-        }
-
-        .btn-era {
-            background: white;
-            border: 3px solid #fda4af;
-            padding: 20px 40px;
-            font-size: 1.5rem;
-            font-weight: bold;
-            color: #9f1239;
-            border-radius: 15px;
-            cursor: pointer;
-            transition: 0.2s;
-            font-family: 'Outfit';
-            width: 250px;
-        }
-
-        .btn-era:hover {
-            background: #fff1f2;
-            transform: translateY(-5px);
-            box-shadow: 0 10px 20px rgba(225, 29, 72, 0.2);
-        }
-
-        .btn-era.correct {
-            background: #10b981;
-            border-color: #059669;
-            color: white;
-        }
-
-        .btn-era.wrong {
-            background: #ef4444;
-            border-color: #b91c1c;
-            color: white;
-        }
-
-        .game-over {
+        .floating-mandala {
             position: absolute;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background: rgba(254, 226, 226, 0.95);
+            top: 50%; left: 50%;
+            transform: translate(-50%, -50%);
+            width: 80vh; height: 80vh;
+            background: url('https://www.transparenttextures.com/patterns/mandala.png');
+            background-size: contain;
+            opacity: 0.1;
+            animation: rotate 60s linear infinite;
+        }
+        @keyframes rotate { from { transform: translate(-50%, -50%) rotate(0deg); } to { transform: translate(-50%, -50%) rotate(360deg); } }
+
+        /* HUD */
+        nav {
+            padding: 24px 40px;
+            display: flex; justify-content: space-between; align-items: center;
+            background: rgba(0,0,0,0.3);
+            backdrop-filter: blur(20px);
+            border-bottom: 1px solid var(--glass-border);
             z-index: 100;
-            display: none;
-            flex-direction: column;
-            justify-content: center;
-            align-items: center;
         }
 
-        .game-over h1 {
-            color: #be123c;
-            font-size: 4rem;
-            margin-bottom: 10px;
+        .logo { font-weight: 900; font-size: 1.5rem; letter-spacing: 2px; color: var(--clay-gold); text-shadow: 0 0 20px rgba(251, 191, 36, 0.4); }
+
+        .btn-back {
+            background: var(--glass); border: 1px solid var(--glass-border);
+            color: white; padding: 10px 25px; border-radius: 50px; cursor: pointer;
+            font-weight: 800; text-decoration: none; transition: 0.3s;
+        }
+        .btn-back:hover { background: #ef4444; transform: scale(1.1); }
+
+        /* Main Hub Layout */
+        main {
+            height: calc(100% - 80px);
+            display: flex; flex-direction: column; align-items: center; justify-content: center;
+            gap: 50px;
+            padding: 40px;
         }
 
-        .btn-restart {
-            background: #e11d48;
-            color: white;
-            border: none;
-            padding: 15px 40px;
-            border-radius: 50px;
-            font-size: 1.2rem;
-            font-weight: bold;
+        .hub-title { text-align: center; }
+        .hub-title h1 { font-size: 3.5rem; font-weight: 900; margin-bottom: 10px; background: linear-gradient(to right, #fff, var(--clay-gold)); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+        .hub-title p { opacity: 0.6; font-size: 1.1rem; letter-spacing: 1px; }
+
+        /* Choice Grid */
+        .choices {
+            display: flex; gap: 30px;
+            width: 100%; max-width: 1200px;
+        }
+
+        .game-card {
+            flex: 1;
+            background: rgba(255,255,255,0.03);
+            backdrop-filter: blur(30px);
+            border: 1px solid var(--glass-border);
+            border-radius: 40px;
+            padding: 40px;
+            text-align: center;
+            transition: 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275);
             cursor: pointer;
-            margin-top: 20px;
+            display: flex; flex-direction: column; align-items: center; gap: 20px;
+            transform-style: preserve-3d;
+            box-shadow: 0 30px 60px rgba(0,0,0,0.5);
+        }
+
+        .game-card:hover {
+            transform: translateY(-20px) rotateY(10deg);
+            border-color: var(--clay-gold);
+            background: rgba(255,255,255,0.07);
+        }
+
+        .card-icon {
+            width: 100px; height: 100px;
+            background: var(--glass); border-radius: 30px;
+            display: flex; align-items: center; justify-content: center;
+            font-size: 3rem; color: var(--clay-gold);
+            box-shadow: 0 15px 30px rgba(0,0,0,0.2);
+            margin-bottom: 20px;
+        }
+
+        .game-card h2 { font-size: 2rem; font-weight: 900; margin: 0; }
+        .game-card p { opacity: 0.6; line-height: 1.5; font-size: 0.95rem; }
+
+        .btn-enter {
+            margin-top: auto;
+            background: var(--clay-gold); color: #000;
+            padding: 15px 40px; border-radius: 50px;
+            font-weight: 900; border: none; font-size: 1rem;
+            cursor: pointer; transition: 0.3s;
+            box-shadow: 0 10px 20px rgba(251, 191, 36, 0.3);
+        }
+        .game-card:hover .btn-enter { background: #fff; transform: scale(1.1); }
+
+        /* Rhythm Game Overlay (Playable) */
+        #gameOverlay {
+            position: fixed; inset: 0; z-index: 500;
+            background: #000; display: none;
+            flex-direction: column; align-items: center;
+        }
+
+        .rhythm-stage {
+            width: 100%; height: 100%; position: relative;
+            background: radial-gradient(circle at bottom, #2d1b4e 0%, #000 70%);
+            display: flex; justify-content: space-around; align-items: flex-end;
+            padding-bottom: 100px;
+        }
+
+        .lane {
+            width: 100px; height: 80%;
+            background: linear-gradient(to top, rgba(139, 92, 246, 0.1), transparent);
+            border-radius: 50px 50px 0 0;
+            position: relative;
+        }
+
+        .target-zone {
+            position: absolute; bottom: 20px; width: 80px; height: 80px;
+            left: 10px; border: 4px dashed var(--clay-gold); border-radius: 50%;
+            opacity: 0.5;
+        }
+
+        .note {
+            position: absolute; width: 60px; height: 60px;
+            background: var(--clay-gold); border-radius: 50%;
+            left: 20px; box-shadow: 0 0 20px var(--clay-gold);
+        }
+
+        #scoreBoard {
+            position: absolute; top: 40px; font-size: 3rem; font-weight: 900;
+            color: var(--clay-gold); text-shadow: 0 0 15px var(--clay-gold);
+        }
+
+        @media (max-width: 1024px) {
+            .choices { flex-direction: column; overflow-y: auto; gap: 20px; }
+            .hub-title h1 { font-size: 2.5rem; }
+            .game-card { padding: 30px; }
         }
     </style>
 </head>
-
 <body>
-    <nav>
-        <div style="font-weight: 900; font-size: 1.5rem;"><i class="fa-solid fa-palette"></i> Cultural Canvas</div>
-        <div class="hud">
-            <div class="stat">
-                <h3>Question</h3>
-                <p id="stat-q">1 / 5</p>
-            </div>
-            <div class="stat">
-                <h3>Score</h3>
-                <p id="stat-score" style="color:#e11d48;">0 px</p>
-            </div>
-        </div>
-        <button class="btn-exit" onclick="window.close()">Exit Gallery</button>
-    </nav>
-
-    <div class="game-area" id="gameArea">
-        <h1 style="color: #be123c; margin-bottom: 20px;">Match the Artifact to its Era</h1>
-
-        <div class="artifact-card">
-            <h2 id="artifactName">...</h2>
-            <p id="artifactHint">...</p>
-        </div>
-
-        <div class="options">
-            <button class="btn-era" onclick="checkAnswer('Ancient Egypt', this)">Ancient Egypt</button>
-            <button class="btn-era" onclick="checkAnswer('Roman Empire', this)">Roman Empire</button>
-            <button class="btn-era" onclick="checkAnswer('Renaissance', this)">Renaissance</button>
-        </div>
+    <div class="ambient-bg">
+        <div class="floating-mandala"></div>
     </div>
 
-    <div class="game-over" id="gameOverScreen">
-        <h1 id="goTitle">Gallery Complete</h1>
-        <p style="font-size: 1.5rem;">You matched historical artifacts.</p>
-        <p id="goScore" style="font-weight:bold; font-size:2rem; color:#be123c;">Final Score: 0 px</p>
-        <button class="btn-restart" onclick="location.reload()">Replay Gallery</button>
+    <nav>
+        <div class="logo">Qrio CULTURE • MELODY MASTER</div>
+        <div class="hud" style="display:flex; gap:30px;">
+             <div id="xpBadge" style="background:var(--clay-gold); color:#000; padding:5px 15px; border-radius:10px; font-weight:900;">LEVEL 1</div>
+        </div>
+        <a href="index.html" class="btn-back">EXIT TO HUB</a>
+    </nav>
+
+    <main id="hubMain">
+        <div class="hub-title">
+            <h1>CULTURAL HERITAGE ARTS</h1>
+            <p>Explore the rhythm, soul, and history of the world.</p>
+        </div>
+
+        <div class="choices">
+            <!-- Melody Master -->
+            <div class="game-card" onclick="startRhythm()">
+                <div class="card-icon"><i class="fa-solid fa-music"></i></div>
+                <h2>Melody Master</h2>
+                <p>Tap to the rhythm of classical instruments. Master the Tabla and Sitar beats!</p>
+                <button class="btn-enter">ENTER CONCERT</button>
+            </div>
+
+            <!-- Ancient Artifacts -->
+            <div class="game-card" onclick="startArtifacts()">
+                <div class="card-icon"><i class="fa-solid fa-shrine-space"></i></div>
+                <h2>Era Match</h2>
+                <p>Identify artifacts from ancient civilizations and match them to their era.</p>
+                <button class="btn-enter" style="background:var(--clay-purple); box-shadow:0 10px 20px rgba(139, 92, 246, 0.3);">START ARCHIVE</button>
+            </div>
+
+            <!-- Mythology Hub -->
+            <div class="game-card">
+                <div class="card-icon"><i class="fa-solid fa-masks-theater"></i></div>
+                <h2>Meta Theatre</h2>
+                <p>Step into the shoes of legendary heroes. High-fidelity script reading and storytelling.</p>
+                <button class="btn-enter" style="background:var(--clay-pink); box-shadow:0 10px 20px rgba(236, 72, 153, 0.3);">INITIATE STAGE</button>
+            </div>
+        </div>
+    </main>
+
+    <!-- Rhythm Game Container -->
+    <div id="gameOverlay">
+        <div id="scoreBoard">0</div>
+        <div class="rhythm-stage">
+            <div class="lane" id="lane0"><div class="target-zone"></div></div>
+            <div class="lane" id="lane1"><div class="target-zone"></div></div>
+            <div class="lane" id="lane2"><div class="target-zone"></div></div>
+            <div class="lane" id="lane3"><div class="target-zone"></div></div>
+        </div>
+        <button class="btn-back" style="margin-bottom:50px; padding:20px 60px;" onclick="closeGame()">STOP MUSIC</button>
     </div>
 
     <script>
-        const questions = [
-            { name: "Great Pyramid of Giza", hint: "A massive tomb built for pharaohs.", answer: "Ancient Egypt" },
-            { name: "The Colosseum", hint: "A grand amphitheater used for gladitorial contests.", answer: "Roman Empire" },
-            { name: "The Mona Lisa", hint: "A masterpiece painting by Leonardo da Vinci.", answer: "Renaissance" },
-            { name: "Hieroglyphics", hint: "A formal writing system used in tombs and papyrus.", answer: "Ancient Egypt" },
-            { name: "The Pantheon", hint: "A former Roman temple, now a church.", answer: "Roman Empire" }
-        ];
-
-        let currentQList = [...questions].sort(() => Math.random() - 0.5); // Shuffle
-        let currentIdx = 0;
         let score = 0;
-        let lock = false;
+        let gameActive = false;
+        let spawnInterval;
 
-        function loadQuestion() {
-            if (currentIdx >= currentQList.length) {
-                endGame();
-                return;
-            }
-            lock = false;
-            let q = currentQList[currentIdx];
-            document.getElementById('artifactName').innerText = q.name;
-            document.getElementById('artifactHint').innerText = `Hint: ${q.hint}`;
-            document.getElementById('stat-q').innerText = `${currentIdx + 1} / ${currentQList.length}`;
+        function startRhythm() {
+            gsap.to("#hubMain", { opacity: 0, scale: 0.9, duration: 0.5, onComplete: () => {
+                document.getElementById('hubMain').style.display = 'none';
+                document.getElementById('gameOverlay').style.display = 'flex';
+                gsap.from("#gameOverlay", { opacity: 0, duration: 0.5 });
+                gameActive = true;
+                score = 0;
+                document.getElementById('scoreBoard').innerText = "0";
+                initRhythmLogic();
+            }});
+        }
 
-            // reset buttons
-            document.querySelectorAll('.btn-era').forEach(btn => {
-                btn.classList.remove('correct', 'wrong');
+        function initRhythmLogic() {
+            spawnInterval = setInterval(() => {
+                if(!gameActive) return;
+                spawnNote();
+            }, 800);
+        }
+
+        function spawnNote() {
+            const laneId = Math.floor(Math.random() * 4);
+            const lane = document.getElementById(`lane${laneId}`);
+            const note = document.createElement('div');
+            note.className = 'note';
+            note.style.top = '0px';
+            lane.appendChild(note);
+
+            gsap.to(note, {
+                top: "85%", 
+                duration: 2.5, 
+                ease: "none",
+                onComplete: () => {
+                    if(note.parentNode) note.remove();
+                }
             });
+
+            note.onclick = (e) => {
+                e.stopPropagation();
+                const top = parseInt(note.style.top);
+                // Check if in hit zone (80% - 90%)
+                const hitPos = parseFloat(note.style.top);
+                if(hitPos > 70) {
+                    score += 100;
+                    document.getElementById('scoreBoard').innerText = score;
+                    gsap.to(note, { scale: 2, opacity: 0, duration: 0.2, onComplete: () => note.remove() });
+                    syncPoints(10);
+                }
+            };
         }
 
-        function checkAnswer(selectedEra, btnElement) {
-            if (lock) return;
-            lock = true;
-
-            const correctEra = currentQList[currentIdx].answer;
-            if (selectedEra === correctEra) {
-                btnElement.classList.add('correct');
-                awardPoints(25);
-            } else {
-                btnElement.classList.add('wrong');
-                // find correct and light it up
-                document.querySelectorAll('.btn-era').forEach(btn => {
-                    if (btn.innerText === correctEra) btn.classList.add('correct');
-                });
-            }
-
-            currentIdx++;
-            setTimeout(loadQuestion, 1500);
+        function closeGame() {
+            gameActive = false;
+            clearInterval(spawnInterval);
+            document.getElementById('gameOverlay').style.display = 'none';
+            document.getElementById('hubMain').style.display = 'flex';
+            gsap.to("#hubMain", { opacity: 1, scale: 1, duration: 0.5 });
         }
 
-        function awardPoints(amount) {
-            score += amount;
-            document.getElementById('stat-score').innerText = score + " px";
-            let activeId = localStorage.getItem('QRIO_active_id');
-            if (activeId) {
+        function startArtifacts() {
+             // For now, reload to clear hub and we can implement logic or link back
+             alert("Initializing Archaeological Archive...");
+             // This can link to the matching game logic if needed or just be a future feature.
+        }
+
+        function syncPoints(pts) {
+            const uid = localStorage.getItem('qrio_active_id');
+            if(uid) {
                 fetch('/api/points', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ userId: activeId, pointsToAdd: amount })
-                }).catch(console.error);
+                    body: JSON.stringify({ userId: uid, pointsToAdd: pts })
+                }).catch(e => console.error(e));
             }
         }
 
-        function endGame() {
-            document.getElementById('gameArea').style.display = 'none';
-            document.getElementById('gameOverScreen').style.display = 'flex';
-            document.getElementById('goScore').innerText = `Final Score: ${score} px`;
-        }
-
-        loadQuestion();
+        // Entrance animation
+        gsap.from(".game-card", { opacity:0, y: 100, stagger: 0.2, duration: 1, ease: "power4.out" });
     </script>
 </body>
-
 </html>

@@ -1,235 +1,278 @@
 <!DOCTYPE html>
 <html lang="en">
-
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Business Management World - SkillVerse</title>
+    <title>Business Tycoon - 3D Ultra Pro</title>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;700;900&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/gsap.min.js"></script>
+    
     <style>
-        @import url('https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;700&display=swap');
+        :root {
+            --primary: #6366f1;
+            --secondary: #ec4899;
+            --accent: #10b981;
+            --bg-dark: #0f172a;
+            --glass: rgba(255, 255, 255, 0.05);
+            --glass-border: rgba(255, 255, 255, 0.1);
+        }
+
+        * { box-sizing: border-box; margin: 0; padding: 0; }
 
         body {
-            margin: 0;
-            background: #0f172a;
-            color: #f8fafc;
-            font-family: 'Space Grotesk', sans-serif;
-            overflow: hidden;
-        }
-
-        .cityscape {
-            position: absolute;
-            bottom: 0;
-            width: 100%;
-            height: 300px;
-            background: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1000 300"><path d="M0,300 L0,200 L50,200 L50,150 L100,150 L100,50 L200,50 L200,250 L300,250 L300,100 L400,100 L400,200 L500,200 L500,0 L600,0 L600,150 L700,150 L700,100 L800,100 L800,200 L900,200 L900,50 L1000,50 L1000,300 Z" fill="%231e293b" opacity="0.5"/></svg>');
-            background-size: contain;
-            z-index: -1;
-            animation: drift 60s linear infinite;
-        }
-
-        @keyframes drift {
-            0% {
-                background-position: 0 0;
-            }
-
-            100% {
-                background-position: -1000px 0;
-            }
-        }
-
-        nav {
-            display: flex;
-            justify-content: space-between;
-            padding: 20px 40px;
-            background: rgba(15, 23, 42, 0.8);
-            backdrop-filter: blur(10px);
-            border-bottom: 1px solid #334155;
-        }
-
-        .hud {
-            display: flex;
-            gap: 40px;
-        }
-
-        .stat {
-            text-align: center;
-        }
-
-        .stat h3 {
-            color: #94a3b8;
-            margin: 0;
-            font-size: 0.9rem;
-            text-transform: uppercase;
-        }
-
-        .stat p {
-            margin: 5px 0 0;
-            font-size: 1.5rem;
-            font-weight: bold;
-            color: #f59e0b;
-        }
-
-        .btn-exit {
-            background: #334155;
+            font-family: 'Outfit', sans-serif;
+            background: #000;
             color: white;
-            border: none;
-            padding: 10px 20px;
-            border-radius: 8px;
-            font-weight: bold;
-            cursor: pointer;
-        }
-
-        .dashboard {
-            max-width: 900px;
-            margin: 50px auto;
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 20px;
-            padding: 20px;
-        }
-
-        .card {
-            background: rgba(30, 41, 59, 0.8);
-            backdrop-filter: blur(20px);
-            border: 1px solid #475569;
-            padding: 30px;
-            border-radius: 20px;
-        }
-
-        .card h2 {
-            margin-top: 0;
-            color: #cbd5e1;
-        }
-
-        button.action {
-            width: 100%;
-            background: #3b82f6;
-            color: white;
-            border: none;
-            padding: 15px;
-            border-radius: 12px;
-            font-size: 1.1rem;
-            font-weight: bold;
-            cursor: pointer;
-            margin-top: 15px;
-            transition: 0.3s;
-        }
-
-        button.action:hover {
-            background: #2563eb;
-            transform: translateY(-2px);
-        }
-
-        button.action:disabled {
-            background: #475569;
-            cursor: not-allowed;
-            transform: none;
-        }
-
-        .progress-bar {
-            width: 100%;
-            height: 10px;
-            background: #334155;
-            border-radius: 5px;
-            margin-top: 10px;
-            overflow: hidden;
-        }
-
-        .progress-fill {
-            height: 100%;
-            background: #22c55e;
-            width: 0%;
-            transition: 0.5s;
-        }
-
-        #log {
-            margin-top: 20px;
-            font-size: 0.9rem;
-            color: #94a3b8;
-            height: 100px;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            overflow-x: hidden;
             overflow-y: auto;
         }
 
-        .game-over {
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100vw;
-            height: 100vh;
-            background: rgba(15, 23, 42, 0.95);
+        /* 3D Ambient Orbs */
+        .orb {
+            position: fixed; border-radius: 50%; filter: blur(100px); z-index: -1; opacity: 0.25;
+            animation: float 15s infinite alternate ease-in-out;
+        }
+        .orb-1 { top: -10%; left: -10%; width: 50vw; height: 50vw; background: var(--primary); }
+        .orb-2 { bottom: -10%; right: -10%; width: 40vw; height: 40vw; background: var(--secondary); }
+
+        @keyframes float { from { transform: translate(0,0) rotate(0); } to { transform: translate(100px, 50px) rotate(30deg); } }
+
+        nav {
+            padding: 15px 30px;
+            display: flex; justify-content: space-between; align-items: center;
+            background: rgba(15, 23, 42, 0.9);
+            backdrop-filter: blur(20px);
+            border-bottom: 1px solid var(--glass-border);
             z-index: 100;
+            position: sticky; top: 0;
+        }
+
+        .logo { font-weight: 900; font-size: 1.3rem; letter-spacing: 1px; color: var(--primary); text-shadow: 0 0 10px var(--primary); }
+
+        .hud-stats { display: flex; gap: 15px; }
+        .stat-card {
+            background: var(--glass);
+            padding: 8px 15px;
+            border-radius: 12px;
+            border: 1px solid var(--glass-border);
+            text-align: center;
+            min-width: 80px;
+        }
+        .stat-label { font-size: 0.6rem; color: #94a3b8; text-transform: uppercase; letter-spacing: 1px; }
+        .stat-value { font-size: 1.1rem; font-weight: 900; color: #fff; }
+
+        .btn-exit {
+            background: rgba(239, 68, 68, 0.1); border: 1px solid rgba(239, 68, 68, 0.2);
+            color: #ef4444; padding: 8px 15px; border-radius: 50px; cursor: pointer;
+            font-weight: 800; transition: 0.3s; font-size: 0.8rem;
+        }
+        .btn-exit:hover { background: #ef4444; color: white; transform: scale(1.05); }
+
+        main {
+            flex: 1;
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            padding: 30px;
+            gap: 30px;
+            max-width: 1400px;
+            width: 100%;
+            margin: 0 auto;
+            position: relative;
+        }
+
+        .action-card {
+            background: rgba(255,255,255,0.07);
+            backdrop-filter: blur(40px);
+            border: 1px solid var(--glass-border);
+            border-radius: 35px;
+            padding: 30px;
             display: flex;
             flex-direction: column;
-            justify-content: center;
+            gap: 20px;
+            box-shadow: 0 30px 60px rgba(0,0,0,0.5);
+            transition: 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            transform: perspective(1000px) rotateX(1deg);
+        }
+        .action-card:hover { transform: perspective(1000px) rotateX(0) translateY(-5px); border-color: var(--primary); }
+
+        .card-header { display: flex; align-items: center; gap: 15px; }
+        .card-header i { font-size: 2rem; color: var(--primary); }
+        .card-header h2 { font-size: 1.8rem; font-weight: 900; }
+
+        .card-desc { font-size: 1rem; color: #94a3b8; line-height: 1.6; }
+
+        .btn-action {
+            width: 100%;
+            padding: 20px;
+            border-radius: 20px;
+            border: none;
+            cursor: pointer;
+            font-weight: 900;
+            font-size: 1.2rem;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            transition: 0.3s;
+            margin-top: auto;
+            display: flex;
             align-items: center;
-            display: none;
+            justify-content: center;
+            gap: 10px;
         }
 
-        .game-over h1 {
-            color: #ef4444;
-            font-size: 4rem;
-            margin-bottom: 0;
+        .btn-blue { background: linear-gradient(135deg, #6366f1, #4f46e5); color: white; box-shadow: 0 10px 20px rgba(79, 70, 229, 0.3); }
+        .btn-purple { background: linear-gradient(135deg, #8b5cf6, #7c3aed); color: white; box-shadow: 0 10px 20px rgba(124, 58, 237, 0.3); }
+        .btn-pink { background: linear-gradient(135deg, #ec4899, #db2777); color: white; box-shadow: 0 10px 20px rgba(219, 39, 119, 0.3); }
+
+        .btn-action:hover:not(:disabled) { transform: scale(1.02) translateY(-2px); filter: brightness(1.1); }
+        .btn-action:disabled { opacity: 0.3; cursor: not-allowed; }
+
+        /* Progress System */
+        .progress-container { width: 100%; margin-top: 10px; }
+        .progress-info { display: flex; justify-content: space-between; font-size: 0.75rem; color: #94a3b8; font-weight: 800; margin-bottom: 5px; }
+        .progress-track { width: 100%; height: 8px; background: rgba(255,255,255,0.05); border-radius: 50px; overflow: hidden; }
+        .progress-fill { height: 100%; width: 0%; border-radius: 50px; transition: 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275); }
+
+        /* Log Panel */
+        #log {
+            flex: 1;
+            background: rgba(0,0,0,0.3);
+            border-radius: 20px;
+            padding: 20px;
+            font-family: monospace;
+            font-size: 0.85rem;
+            line-height: 1.5;
+            color: #10b981;
+            overflow-y: auto;
+            border: 1px solid rgba(16, 185, 129, 0.1);
+            max-height: 200px;
         }
 
-        .game-over p {
-            color: #94a3b8;
-            font-size: 1.5rem;
+        .log-entry { margin-bottom: 10px; border-left: 2px solid #10b981; padding-left: 10px; }
+        .log-error { border-color: #ef4444; color: #ef4444; }
+
+        #gameOver {
+            position: fixed; inset: 0; z-index: 1000;
+            background: rgba(15, 23, 42, 0.98);
+            backdrop-filter: blur(20px);
+            display: none; flex-direction: column; align-items: center; justify-content: center;
+            text-align: center;
+        }
+
+        @media (max-width: 1024px) {
+            main { grid-template-columns: 1fr; padding: 20px; }
+            .action-card { padding: 25px; border-radius: 25px; }
+        }
+
+        @media (max-width: 768px) {
+            nav { flex-direction: column; gap: 15px; padding: 15px; }
+            .hud-stats { width: 100%; justify-content: space-around; flex-wrap: wrap; }
+            .stat-card { flex: 1; min-width: 70px; padding: 5px; }
+            .stat-value { font-size: 0.9rem; }
+            .logo { font-size: 1.1rem; }
+            .card-header h2 { font-size: 1.4rem; }
+            .btn-action { padding: 15px; font-size: 1rem; }
+        }
+
+        @media (max-width: 480px) {
+            main { padding: 10px; gap: 15px; }
+            .action-card { padding: 20px; }
+            .btn-exit { position: absolute; top: 10px; right: 10px; padding: 5px 10px; }
         }
     </style>
 </head>
-
 <body>
-    <div class="cityscape"></div>
+    <div class="orb orb-1"></div>
+    <div class="orb orb-2"></div>
+
     <nav>
-        <div style="font-weight: bold; font-size: 1.5rem;">SkillVerse • Business Simulator</div>
-        <div class="hud">
-            <div class="stat">
-                <h3>Capital</h3>
-                <p id="money">$1,000</p>
+        <div class="logo">Qrio BUSINESS TYCOON</div>
+        <div class="hud-stats">
+            <div class="stat-card">
+                <div class="stat-label">Capital</div>
+                <div class="stat-value" id="money">$1,000</div>
             </div>
-            <div class="stat">
-                <h3>Staff</h3>
-                <p id="staff">1</p>
+            <div class="stat-card">
+                <div class="stat-label">Workforce</div>
+                <div class="stat-value" id="staff">1</div>
             </div>
-            <div class="stat">
-                <h3>XP Points</h3>
-                <p id="xp" style="color:#22c55e;">0 px</p>
+            <div class="stat-card">
+                <div class="stat-label">Zen Points</div>
+                <div class="stat-value" id="xp" style="color:var(--accent)">0 px</div>
             </div>
         </div>
-        <button class="btn-exit" onclick="window.close()">Walk Away</button>
+        <button class="btn-exit" onclick="window.close()">EXIT ENGINE</button>
     </nav>
 
-    <div class="dashboard">
-        <div class="card">
-            <h2>Operations</h2>
-            <p>Run your company for a week to generate revenue based on staff and marketing reach.</p>
-            <button class="action" onclick="runWeek()">Run Week</button>
-            <div id="log">Welcome to your new startup! Invest capital into growth.</div>
-        </div>
-
-        <div class="card">
-            <h2>Investments</h2>
-            <div style="margin-bottom: 20px;">
-                <p>Hire Staff (-$500)</p>
-                <button class="action" id="btn-staff" style="background: #8b5cf6;" onclick="hireStaff()">Hire
-                    Employee</button>
+    <main>
+        <!-- Operations Card -->
+        <div class="action-card">
+            <div class="card-header">
+                <i class="fa-solid fa-gears"></i>
+                <h2>Startup Ops</h2>
             </div>
-            <div>
-                <p>Marketing Campaign (-$300)</p>
-                <div class="progress-bar">
-                    <div class="progress-fill" id="market-fill"></div>
+            <p class="card-desc">Simulate one week of business cycles. Staff and Marketing levels determine your revenue potential.</p>
+            
+            <div class="progress-container">
+                <div class="progress-info">
+                    <span>WEEKLY CYCLE</span>
+                    <span id="cycleStatus">STANDBY</span>
                 </div>
-                <button class="action" id="btn-market" style="background: #ec4899;" onclick="boostMarketing()">Boost
-                    Marketing</button>
+                <div class="progress-track">
+                    <div class="progress-fill" id="runFill" style="background:var(--primary)"></div>
+                </div>
+            </div>
+
+            <div id="log">
+                <div class="log-entry">Terminal link established. Awaiting command...</div>
+            </div>
+
+            <button class="btn-action btn-blue" id="btnRun" onclick="runWeek()">
+                <i class="fa-solid fa-play"></i> RUN WEEK
+            </button>
+        </div>
+
+        <!-- Expansion Card -->
+        <div class="action-card">
+            <div class="card-header">
+                <i class="fa-solid fa-rocket"></i>
+                <h2>Capital Growth</h2>
+            </div>
+            
+            <div style="flex:1; display:flex; flex-direction:column; gap:25px;">
+                <div class="expansion-sector">
+                    <div class="progress-info">
+                        <span>HUMAN CAPITAL (-$500)</span>
+                        <span id="staffCount">Staff: 1</span>
+                    </div>
+                    <button class="btn-action btn-purple" id="btnStaff" onclick="hireStaff()">
+                        <i class="fa-solid fa-user-plus"></i> HIRE EMPLOYEE
+                    </button>
+                </div>
+
+                <div class="expansion-sector">
+                    <div class="progress-info">
+                        <span>MARKETING REACH (-$300)</span>
+                        <span id="mktStatus">LVL 1</span>
+                    </div>
+                    <div class="progress-track" style="margin-bottom:10px;">
+                        <div class="progress-fill" id="mktFill" style="background:var(--secondary)"></div>
+                    </div>
+                    <button class="btn-action btn-pink" id="btnMarket" onclick="boostMarketing()">
+                        <i class="fa-solid fa-bullhorn"></i> BOOST REACH
+                    </button>
+                </div>
             </div>
         </div>
-    </div>
+    </main>
 
-    <div class="game-over" id="gameOverScreen">
-        <h1>BANKRUPT</h1>
-        <p>Your startup ran out of capital.</p>
-        <button class="action" style="width:auto; padding: 15px 30px;" onclick="location.reload()">Start New
-            Concept</button>
+    <div id="gameOver">
+        <h1 style="font-size: 5rem; font-weight: 900; color: #ef4444;">BANKRUPT</h1>
+        <p style="font-size: 1.5rem; opacity: 0.6; margin: 20px 0;">The company funds have dried up.</p>
+        <button class="btn-action btn-blue" style="width:auto; padding: 20px 60px;" onclick="location.reload()">RE-INITIALIZE STARTUP</button>
     </div>
 
     <script>
@@ -237,55 +280,64 @@
         let staff = 1;
         let marketingLevel = 1;
         let xp = 0;
+        let isRunning = false;
 
         function updateUI() {
-            document.getElementById('money').innerText = "$" + money;
+            document.getElementById('money').innerText = "$" + money.toLocaleString();
             document.getElementById('staff').innerText = staff;
+            document.getElementById('staffCount').innerText = "Staff: " + staff;
             document.getElementById('xp').innerText = xp + " px";
-            document.getElementById('btn-staff').disabled = money < 500;
-            document.getElementById('btn-market').disabled = money < 300 || marketingLevel >= 5;
-            document.getElementById('market-fill').style.width = (marketingLevel * 20) + "%";
+            document.getElementById('mktStatus').innerText = "LVL " + marketingLevel;
+            document.getElementById('mktFill').style.width = (marketingLevel * 20) + "%";
+
+            // Disable buttons if not enough money
+            document.getElementById('btnStaff').disabled = money < 500 || isRunning;
+            document.getElementById('btnMarket').disabled = money < 300 || marketingLevel >= 5 || isRunning;
+            document.getElementById('btnRun').disabled = isRunning;
         }
 
-        function logMsg(msg) {
+        function logMsg(msg, isError = false) {
             const log = document.getElementById('log');
-            log.innerHTML = msg + "<br><br>" + log.innerHTML;
+            const entry = document.createElement('div');
+            entry.className = isError ? 'log-entry log-error' : 'log-entry';
+            entry.innerHTML = `[${new Date().toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'})}] ${msg}`;
+            log.prepend(entry);
         }
 
-        function awardXP(amount) {
-            xp += amount;
-            let activeId = localStorage.getItem('QRIO_active_id');
-            if (activeId) {
-                fetch('/api/points', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ userId: activeId, pointsToAdd: amount })
-                }).catch(console.error);
-            }
+        async function runWeek() {
+            if(isRunning) return;
+            isRunning = true;
+            updateUI();
+
+            document.getElementById('cycleStatus').innerText = "PROCESSING...";
+            gsap.to("#runFill", { width: "100%", duration: 1.5, ease: "slow(0.7, 0.7, false)", onComplete: finishWeek });
         }
 
-        function runWeek() {
-            let revenue = (staff * 200) * (1 + (marketingLevel * 0.2));
-            let costs = (staff * 100);
+        function finishWeek() {
+            let revenue = (staff * 250) * (1 + (marketingLevel * 0.3));
+            let costs = (staff * 150);
             let profit = Math.floor(revenue - costs);
 
             money += profit;
 
-            // Random unexpected cost to simulate business volatility
-            if (Math.random() < 0.25) {
-                let surpriseCost = Math.floor(Math.random() * 300) + 150;
-                money -= surpriseCost;
-                logMsg(`<span style="color:#ef4444">Surprise deduction! Server crash cost $${surpriseCost}</span>`);
+            // Volatility check
+            if (Math.random() < 0.2) {
+                let crashBonus = Math.floor(Math.random() * 400) + 200;
+                money -= crashBonus;
+                logMsg(`SYSTEM ALERT: Network breach cost $${crashBonus}`, true);
             }
-            logMsg(`Week complete. Revenue: $${Math.floor(revenue)}, Wages: $${costs}. Net: <b>$${profit}</b>`);
+
+            logMsg(`Week Cycle Complete. Net Profit: <span style="color:#fff">$${profit}</span>`);
+            
+            awardPoints(20);
+            
+            gsap.set("#runFill", { width: "0%" });
+            document.getElementById('cycleStatus').innerText = "STANDBY";
+            isRunning = false;
 
             if (money < 0) {
-                updateUI();
-                document.getElementById('gameOverScreen').style.display = 'flex';
-                return;
+                document.getElementById('gameOver').style.display = 'flex';
             }
-
-            awardXP(10);
             updateUI();
         }
 
@@ -293,8 +345,9 @@
             if (money >= 500) {
                 money -= 500;
                 staff++;
-                awardXP(25);
-                logMsg("Hired a new talented employee!");
+                awardPoints(50);
+                logMsg(`Staff Expanded. Current headcount: ${staff}`);
+                gsap.from("#staffCount", { scale: 1.5, duration: 0.3 });
                 updateUI();
             }
         }
@@ -303,14 +356,28 @@
             if (money >= 300 && marketingLevel < 5) {
                 money -= 300;
                 marketingLevel++;
-                awardXP(25);
-                logMsg("Launched brand marketing campaign! Revenue multiplier increased.");
+                awardPoints(50);
+                logMsg(`Campaign Live. Marketing reached Level ${marketingLevel}`);
+                gsap.from("#mktStatus", { scale: 1.5, duration: 0.3 });
                 updateUI();
             }
         }
 
+        function awardPoints(pts) {
+            xp += pts;
+            const uid = localStorage.getItem('qrio_active_id');
+            if(uid) {
+                fetch('/api/points', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ userId: uid, pointsToAdd: pts })
+                }).catch(e => console.error(e));
+            }
+        }
+
+        // Initialize animations
+        gsap.from(".action-card", { opacity: 0, scale: 0.9, duration: 1, stagger: 0.2, ease: "power4.out" });
         updateUI();
     </script>
 </body>
-
 </html>

@@ -244,7 +244,7 @@
               Runner = Matter.Runner;
 
         const engine = Engine.create();
-        engine.world.gravity.y = -0.05; // Bubbles float up
+        engine.world.gravity.y = -0.18; // FASTER FLOAT SPEED
         
         const canvasOut = document.getElementById('output_canvas');
         const ctx = canvasOut.getContext('2d');
@@ -366,12 +366,17 @@
             
             ctx.clearRect(0, 0, canvasOut.width, canvasOut.height);
             
-            // Draw Video Underlay (Mirror)
+            // Draw Video Underlay (Mirror + Better Color)
             ctx.save();
             ctx.scale(-1, 1);
             ctx.translate(-canvasOut.width, 0);
-            ctx.globalAlpha = 0.35;
+            // Blend video with background colors
+            ctx.globalAlpha = 0.5; // Slightly brighter than before
             ctx.drawImage(videoElement, 0, 0, canvasOut.width, canvasOut.height);
+            // Subtle color tint layer
+            ctx.globalCompositeOperation = 'overlay';
+            ctx.fillStyle = 'rgba(139, 92, 246, 0.2)'; 
+            ctx.fillRect(0, 0, canvasOut.width, canvasOut.height);
             ctx.restore();
 
             // Draw Bubbles

@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Qrio Math Burst - Premium Edition</title>
+    <title>Qrio Math Burst - Ultra Edition</title>
     
     <!-- Libraries -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/matter-js/0.19.0/matter.min.js"></script>
@@ -20,9 +20,10 @@
             --primary: #8b5cf6;
             --secondary: #ec4899;
             --accent: #facc15;
+            --cyber: #00f2ff;
             --bg: #020617;
-            --glass: rgba(255, 255, 255, 0.05);
-            --glass-border: rgba(255, 255, 255, 0.1);
+            --glass: rgba(255, 255, 255, 0.08);
+            --glass-border: rgba(255, 255, 255, 0.15);
         }
 
         body, html {
@@ -42,111 +43,121 @@
             position: absolute; top: 0; left: 0; z-index: 1;
         }
 
+        /* Gradient Overlay for Background */
+        .vignette {
+            position: fixed; inset: 0;
+            background: radial-gradient(circle at center, transparent 30%, rgba(2, 6, 23, 0.7) 100%);
+            z-index: 2; pointer-events: none;
+        }
+
         /* UI Overlays */
         .overlay {
             position: fixed; inset: 0;
             display: flex; flex-direction: column;
             align-items: center; justify-content: center;
             z-index: 1000;
-            background: rgba(2, 6, 23, 0.95);
-            backdrop-filter: blur(10px);
-            transition: 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+            background: rgba(2, 6, 23, 0.9);
+            backdrop-filter: blur(15px);
+            transition: 0.5s ease;
         }
 
         .overlay.hidden { opacity: 0; pointer-events: none; transform: scale(1.1); }
 
         .game-card {
-            background: var(--glass);
+            background: rgba(255, 255, 255, 0.05);
             border: 1px solid var(--glass-border);
-            border-radius: 30px;
-            padding: 40px;
+            border-radius: 40px;
+            padding: 50px;
             text-align: center;
-            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
-            max-width: 500px;
+            box-shadow: 0 0 50px rgba(139, 92, 246, 0.2);
+            max-width: 550px;
             width: 90%;
         }
 
         .title {
-            font-size: 3rem; font-weight: 900;
-            background: linear-gradient(to right, #8b5cf6, #ec4899);
+            font-size: 3.5rem; font-weight: 900;
+            background: linear-gradient(45deg, var(--cyber), var(--secondary));
             -webkit-background-clip: text;
             -webkit-text-fill-color: transparent;
-            margin-bottom: 10px;
+            margin-bottom: 5px;
+            letter-spacing: -1px;
         }
 
         .hand-selector {
-            display: flex; gap: 20px; justify-content: center; margin: 30px 0;
+            display: flex; gap: 20px; justify-content: center; margin: 35px 0;
         }
 
         .hand-btn {
-            padding: 15px 30px; border-radius: 20px;
+            flex: 1; padding: 20px; border-radius: 25px;
             border: 2px solid var(--glass-border);
-            background: rgba(255,255,255,0.05);
+            background: rgba(255,255,255,0.03);
             color: white; cursor: pointer;
-            transition: 0.3s; font-weight: 700;
-            display: flex; flex-direction: column; align-items: center; gap: 10px;
+            transition: 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            font-weight: 700;
         }
 
-        .hand-btn i { font-size: 2rem; }
+        .hand-btn i { font-size: 2.2rem; display: block; margin-bottom: 10px; opacity: 0.6; }
         .hand-btn.active {
-            border-color: var(--primary);
-            background: rgba(139, 92, 246, 0.2);
-            box-shadow: 0 0 20px rgba(139, 92, 246, 0.3);
-            transform: translateY(-5px);
+            border-color: var(--cyber);
+            background: rgba(0, 242, 255, 0.1);
+            box-shadow: 0 0 30px rgba(0, 242, 255, 0.3);
+            transform: scale(1.05);
         }
+        .hand-btn.active i { opacity: 1; color: var(--cyber); }
 
         .btn-start {
-            background: var(--primary);
+            background: linear-gradient(90deg, var(--primary), var(--secondary));
             color: white; border: none;
-            padding: 20px 60px; border-radius: 50px;
-            font-size: 1.5rem; font-weight: 900;
+            padding: 22px 70px; border-radius: 60px;
+            font-size: 1.6rem; font-weight: 900;
             cursor: pointer; transition: 0.3s;
-            box-shadow: 0 10px 25px rgba(139, 92, 246, 0.4);
+            box-shadow: 0 15px 35px rgba(139, 92, 246, 0.4);
+            text-transform: uppercase; letter-spacing: 2px;
         }
-        .btn-start:hover { transform: scale(1.05); box-shadow: 0 15px 35px rgba(139, 92, 246, 0.6); }
+        .btn-start:hover { transform: translateY(-5px); box-shadow: 0 20px 45px rgba(236, 72, 153, 0.5); }
 
-        /* In-Game HUD */
+        /* HUD */
         .hud {
             position: fixed; top: 0; left: 0; width: 100%;
-            padding: 25px; display: flex; justify-content: space-between; align-items: flex-start;
+            padding: 30px; display: flex; justify-content: space-between; align-items: flex-start;
             z-index: 500; pointer-events: none;
         }
 
         .hud-card {
-            background: rgba(255, 255, 255, 0.07);
-            backdrop-filter: blur(15px);
-            border: 1px solid rgba(255, 255, 255, 0.1);
-            padding: 10px 25px; border-radius: 20px;
-            display: flex; gap: 30px; pointer-events: all;
+            background: rgba(2, 6, 23, 0.5);
+            backdrop-filter: blur(20px);
+            border: 1px solid var(--glass-border);
+            padding: 12px 35px; border-radius: 25px;
+            display: flex; gap: 40px; pointer-events: all;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.3);
         }
 
-        .stat { text-align: center; }
-        .stat-val { font-size: 1.8rem; font-weight: 900; color: var(--accent); display: block; }
-        .stat-label { font-size: 0.7rem; text-transform: uppercase; letter-spacing: 1px; color: #94a3b8; }
+        .stat-val { font-size: 2rem; font-weight: 900; color: var(--accent); display: block; line-height: 1; }
+        .stat-label { font-size: 0.75rem; text-transform: uppercase; letter-spacing: 2px; color: #64748b; font-weight: 700; margin-bottom: 5px; display: block; }
 
-        .btn-icon {
-            width: 55px; height: 55px;
-            background: rgba(255,255,255,0.1);
-            border: 1px solid rgba(255,255,255,0.1);
-            border-radius: 18px; display: flex; align-items: center; justify-content: center;
+        .btn-round {
+            width: 65px; height: 65px;
+            background: var(--glass);
+            border: 1px solid var(--glass-border);
+            border-radius: 50%; display: flex; align-items: center; justify-content: center;
             color: white; text-decoration: none; cursor: pointer; pointer-events: all;
-            transition: 0.3s;
+            transition: 0.4s;
         }
-        .btn-icon:hover { background: #ef4444; border-color: #ef4444; transform: rotate(-5deg); }
+        .btn-round:hover { background: #ef4444; border-color: #ef4444; transform: scale(1.1) rotate(-15deg); }
 
-        .target-bubble {
-            position: fixed; top: 110px; left: 50%; transform: translateX(-50%);
-            background: white; border-radius: 35px; padding: 15px 50px;
+        .target-box {
+            position: fixed; top: 120px; left: 50%; transform: translateX(-50%);
+            background: rgba(255, 255, 255, 0.95); border-radius: 40px; padding: 20px 60px;
             color: #0f172a; text-align: center; z-index: 600;
-            box-shadow: 0 20px 40px rgba(0,0,0,0.4);
+            box-shadow: 0 25px 50px rgba(0,0,0,0.5);
         }
-        #targetEq { font-size: 3.5rem; font-weight: 900; margin: 0; }
-        .target-label { font-size: 0.8rem; font-weight: 700; color: var(--primary); letter-spacing: 2px; }
+        #targetEq { font-size: 4rem; font-weight: 950; margin: 0; line-height: 1; }
+        .target-label { font-size: 0.85rem; font-weight: 800; color: var(--primary); letter-spacing: 3px; text-transform: uppercase; margin-bottom: 8px; }
 
         #feedback {
             position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%) scale(0);
-            font-size: 7rem; font-weight: 900; z-index: 1000; opacity: 0;
-            text-shadow: 0 0 30px rgba(255,255,255,0.5);
+            font-size: 8rem; font-weight: 900; z-index: 1000; opacity: 0;
+            -webkit-text-stroke: 4px white; color: transparent;
         }
 
         #loader {
@@ -155,102 +166,93 @@
             z-index: 2000;
         }
 
-        /* Animations */
-        @keyframes pulseGlow {
-            0% { box-shadow: 0 0 0 0 rgba(139, 92, 246, 0.4); }
-            70% { box-shadow: 0 0 0 20px rgba(139, 92, 246, 0); }
-            100% { box-shadow: 0 0 0 0 rgba(139, 92, 246, 0); }
+        @keyframes spin { to { transform: rotate(360deg); } }
+        @keyframes sway {
+            0% { transform: translateX(0px); }
+            50% { transform: translateX(20px); }
+            100% { transform: translateX(0px); }
         }
 
         @media (max-width: 768px) {
-            .target-bubble { width: 85%; top: 90px; }
-            #targetEq { font-size: 2.2rem; }
-            .hud-card { gap: 15px; padding: 8px 15px; }
-            .stat-val { font-size: 1.2rem; }
+            .target-box { width: 85%; padding: 15px; }
+            #targetEq { font-size: 2.5rem; }
+            .hud-card { gap: 20px; padding: 10px 20px; }
+            .stat-val { font-size: 1.4rem; }
         }
-        @keyframes spin { to { transform: rotate(360deg); } }
     </style>
 </head>
 <body>
     <canvas id="bgCanvas"></canvas>
+    <div class="vignette"></div>
     <video class="input_video"></video>
     <canvas id="output_canvas"></canvas>
 
-    <!-- Initial Loader -->
     <div id="loader">
-        <div style="width:80px; height:80px; border:8px solid #1e293b; border-top-color:var(--primary); border-radius:50%; animation:spin 1s linear infinite;"></div>
-        <h2 style="margin-top:25px; letter-spacing:2px; font-weight:900;">WAKING UP SENSORS...</h2>
+        <div style="width:100px; height:100px; border:10px solid #1e293b; border-top-color:var(--cyber); border-radius:50%; animation:spin 1s linear infinite; box-shadow: 0 0 30px rgba(0,242,255,0.3);"></div>
+        <h2 style="margin-top:30px; letter-spacing:4px; font-weight:900; color:var(--cyber);">SYNCING NEURAL LINK...</h2>
     </div>
 
-    <!-- Start Menu with Hand Select -->
     <div id="menuOverlay" class="overlay hidden">
         <div class="game-card">
-            <h1 class="title">QRIO MATH</h1>
-            <p style="opacity:0.7;">Pick your power hand and jump in!</p>
+            <h1 class="title">MATH BURST</h1>
+            <p style="opacity:0.6; font-size: 1.1rem;">Select your dominant hand to begin.</p>
             
             <div class="hand-selector">
                 <button class="hand-btn active" id="btnLeft" onclick="selectHand('Left')">
-                    <i class="fa-solid fa-hand-back-fist"></i>
+                    <i class="fa-solid fa-hand-fist"></i>
                     <span>LEFT HAND</span>
                 </button>
                 <button class="hand-btn" id="btnRight" onclick="selectHand('Right')">
-                    <i class="fa-solid fa-hand-back-fist" style="transform: skewX(180deg);"></i>
+                    <i class="fa-solid fa-hand-fist" style="transform: skewX(180deg);"></i>
                     <span>RIGHT HAND</span>
                 </button>
             </div>
 
-            <button class="btn-start" onclick="startGame()">SURGE START</button>
+            <button class="btn-start" onclick="startGame()">INITIATE PHASE</button>
         </div>
     </div>
 
-    <!-- HUD -->
     <div class="hud">
-        <a href="index.html" class="btn-icon"><i class="fa-solid fa-arrow-left"></i></a>
+        <a href="index.html" class="btn-round"><i class="fa-solid fa-house"></i></a>
         <div class="hud-card">
             <div class="stat">
-                <span class="stat-label">Zen Points</span>
+                <span class="stat-label">Neural Score</span>
                 <span class="stat-val" id="score">0000</span>
             </div>
             <div class="stat">
-                <span class="stat-label">Seconds</span>
+                <span class="stat-label">Integrity</span>
                 <span class="stat-val" id="timer">60</span>
             </div>
         </div>
-        <div style="width:55px;"></div>
+        <div style="width:65px;"></div>
     </div>
 
-    <div class="target-bubble">
-        <div class="target-label">POISON BUBBLE TARGET</div>
+    <div class="target-box">
+        <div class="target-label">OBJECTIVE</div>
         <div id="targetEq">...</div>
     </div>
 
-    <div id="feedback">SUPER!</div>
+    <div id="feedback">BOOM!</div>
 
     <script>
-        // --- Configuration ---
-        let selectedHandSide = 'Left'; // Default
+        // --- Variables ---
+        let selectedHandSide = 'Left';
         let score = 0;
         let timeLeft = 60;
         let gameActive = false;
         let curProblem = { eq: "", ans: 0 };
         let particles = [];
         let bubbles = [];
-        let handPos = { x: -100, y: -100 };
+        let handPos = { x: -500, y: -500 };
+        let frameCount = 0;
 
-        // --- Physics & Engine ---
-        const Engine = Matter.Engine,
-              World = Matter.World,
-              Bodies = Matter.Bodies,
-              Runner = Matter.Runner;
-
+        // --- Physics ---
+        const Engine = Matter.Engine, World = Matter.World, Bodies = Matter.Bodies;
         const engine = Engine.create();
-        engine.world.gravity.y = -0.18; // FASTER FLOAT SPEED
+        engine.world.gravity.y = 0; // Manual float logic for better control
         
         const canvasOut = document.getElementById('output_canvas');
         const ctx = canvasOut.getContext('2d');
-
-        // Global variables (Declared before first use in resize)
-        let renderer, scene, camera, meshGroup;
 
         function resize() {
             canvasOut.width = window.innerWidth;
@@ -260,37 +262,38 @@
         window.addEventListener('resize', resize);
         resize();
 
-        // --- 3D Background (Three.js) ---
+        // --- Three.js Background ---
+        let renderer, scene, camera, meshGroup;
         function init3DBG() {
             scene = new THREE.Scene();
-            camera = new THREE.PerspectiveCamera(75, window.innerWidth/window.innerHeight, 1, 1000);
-            camera.position.z = 400;
+            camera = new THREE.PerspectiveCamera(75, window.innerWidth/window.innerHeight, 1, 2000);
+            camera.position.z = 600;
             renderer = new THREE.WebGLRenderer({ canvas: document.getElementById('bgCanvas'), antialias: true, alpha: true });
             renderer.setSize(window.innerWidth, window.innerHeight);
             
             meshGroup = new THREE.Group();
-            const geometry = new THREE.TorusKnotGeometry(10, 3, 100, 16);
-            for(let i=0; i<40; i++) {
-                const material = new THREE.MeshBasicMaterial({ color: i % 2 === 0 ? 0x8b5cf6 : 0xec4899, wireframe: true, transparent: true, opacity: 0.3 });
+            const geometry = new THREE.IcosahedronGeometry(10, 0);
+            for(let i=0; i<150; i++) {
+                const material = new THREE.MeshBasicMaterial({ color: i % 3 === 0 ? 0x00f2ff : 0xec4899, wireframe: true, transparent: true, opacity: 0.2 });
                 const mesh = new THREE.Mesh(geometry, material);
-                mesh.position.set((Math.random()-0.5)*1000, (Math.random()-0.5)*1000, (Math.random()-0.5)*1000);
+                mesh.position.set((Math.random()-0.5)*2000, (Math.random()-0.5)*2000, (Math.random()-0.5)*2000);
                 mesh.rotation.set(Math.random()*Math.PI, Math.random()*Math.PI, 0);
-                mesh.scale.setScalar(Math.random()*10 + 2);
+                mesh.scale.setScalar(Math.random()*15 + 5);
                 meshGroup.add(mesh);
             }
             scene.add(meshGroup);
 
             function animate3D() {
                 requestAnimationFrame(animate3D);
-                meshGroup.rotation.y += 0.001;
-                meshGroup.rotation.x += 0.0005;
+                meshGroup.rotation.y += 0.0005;
+                meshGroup.rotation.x += 0.0002;
                 renderer.render(scene, camera);
             }
             animate3D();
         }
         init3DBG();
 
-        // --- Hand Controller ---
+        // --- Game Logic ---
         function selectHand(side) {
             selectedHandSide = side;
             document.getElementById('btnLeft').classList.toggle('active', side === 'Left');
@@ -299,12 +302,8 @@
 
         function startGame() {
             document.getElementById('menuOverlay').classList.add('hidden');
-            score = 0;
-            timeLeft = 60;
-            gameActive = true;
-            bubbles = [];
-            World.clear(engine.world);
-            
+            score = 0; timeLeft = 60; gameActive = true;
+            bubbles = []; World.clear(engine.world);
             newProblem();
             startTimer();
             gameLoop();
@@ -315,7 +314,9 @@
             const b = Math.floor(Math.random()*12) + 1;
             curProblem = { eq: `${a} + ${b}`, ans: a + b };
             document.getElementById('targetEq').innerText = curProblem.eq;
-            gsap.from('#targetEq', { scale: 0.5, opacity: 0, duration: 0.5, ease: "back.out(2)" });
+            gsap.from('#targetEq', { y: 20, opacity: 0, duration: 0.5, ease: "power4.out" });
+            
+            // Randomly timed spawns
             spawnBubbles(curProblem.ans);
         }
 
@@ -325,111 +326,110 @@
             
             let choices = [correct];
             while(choices.length < 4) {
-                let wrong = correct + Math.floor(Math.random() * 15) - 7;
-                if(wrong > 0 && !choices.includes(wrong)) choices.push(wrong);
+                let wrong = correct + Math.floor(Math.random() * 20) - 10;
+                if(wrong > 0 && !choices.includes(wrong) && wrong !== correct) choices.push(wrong);
             }
             choices.sort(() => Math.random() - 0.5);
 
             choices.forEach((val, i) => {
-                const r = 65 + Math.random() * 15;
-                const x = (window.innerWidth / 5) * (i + 1);
-                const y = window.innerHeight + 100;
+                const r = 70 + Math.random() * 20;
+                const x = (window.innerWidth / 5) * (i + 1) + (Math.random()-0.5)*100; // Scattered
+                const y = window.innerHeight + 150 + (i * 100); // Varied start heights
                 
-                const body = Bodies.circle(x, y, r, { restitution: 0.9, frictionAir: 0.02 });
+                const body = Bodies.circle(x, y, r, { frictionAir: 0.01, restitution: 0.95 });
                 bubbles.push({
                     body, val, radius: r,
-                    color: val === correct ? '#8b5cf6' : '#ec4899',
-                    glow: val === correct ? 'rgba(139, 92, 246, 0.5)' : 'rgba(236, 72, 153, 0.5)',
+                    color: val === correct ? '#00f2ff' : '#ec4899',
+                    swayOffset: Math.random() * Math.PI * 2,
+                    speed: 4 + Math.random() * 3,
                     popped: false
                 });
                 World.add(engine.world, body);
             });
         }
 
-        // --- Particle System ---
         function createExplosion(x, y, color) {
-            for(let i=0; i<15; i++) {
+            for(let i=0; i<25; i++) {
                 particles.push({
                     x, y,
-                    vx: (Math.random()-0.5)*15,
-                    vy: (Math.random()-0.5)*15,
-                    life: 1.0,
-                    size: Math.random()*8 + 2,
-                    color
+                    vx: (Math.random()-0.5)*20,
+                    vy: (Math.random()-0.5)*20,
+                    life: 1.0, size: Math.random()*10 + 2, color
                 });
             }
         }
 
         function gameLoop() {
             if(!gameActive) return;
+            frameCount++;
             Engine.update(engine);
-            
             ctx.clearRect(0, 0, canvasOut.width, canvasOut.height);
             
-            // Draw Video Underlay (Mirror + Better Color)
+            // Mirror Video Underlay (Brighter & Cooler)
             ctx.save();
             ctx.scale(-1, 1);
             ctx.translate(-canvasOut.width, 0);
-            // Blend video with background colors
-            ctx.globalAlpha = 0.5; // Slightly brighter than before
+            ctx.globalAlpha = 0.5;
             ctx.drawImage(videoElement, 0, 0, canvasOut.width, canvasOut.height);
-            // Subtle color tint layer
-            ctx.globalCompositeOperation = 'overlay';
-            ctx.fillStyle = 'rgba(139, 92, 246, 0.2)'; 
-            ctx.fillRect(0, 0, canvasOut.width, canvasOut.height);
+            ctx.globalAlpha = 0.2;
+            ctx.fillStyle = '#020617';
+            ctx.fillRect(0,0,canvasOut.width, canvasOut.height);
             ctx.restore();
 
-            // Draw Bubbles
+            // Bubbles
             bubbles.forEach(b => {
                 if(b.popped) return;
+                
+                // Manual Float + Sway Logic
+                const sx = Math.sin(frameCount * 0.05 + b.swayOffset) * 2;
+                Matter.Body.setPosition(b.body, {
+                    x: b.body.position.x + sx,
+                    y: b.body.position.y - b.speed
+                });
+
                 const { x, y } = b.body.position;
                 
-                // Neon Glow
+                // Draw Bubble (Premium Gloss)
                 ctx.save();
-                ctx.shadowBlur = 25;
+                ctx.shadowBlur = 40;
                 ctx.shadowColor = b.color;
                 
-                // Bubble Body
+                const gradient = ctx.createRadialGradient(x - b.radius*0.3, y - b.radius*0.3, 0, x, y, b.radius);
+                gradient.addColorStop(0, 'rgba(255,255,255,0.4)');
+                gradient.addColorStop(0.5, 'rgba(255,255,255,0.1)');
+                gradient.addColorStop(1, 'rgba(255,255,255,0.05)');
+
                 ctx.beginPath();
                 ctx.arc(x, y, b.radius, 0, Math.PI*2);
-                ctx.fillStyle = 'rgba(255, 255, 255, 0.15)';
+                ctx.fillStyle = gradient;
                 ctx.fill();
                 ctx.strokeStyle = b.color;
-                ctx.lineWidth = 4;
+                ctx.lineWidth = 5;
                 ctx.stroke();
-                
-                // Highlight
-                ctx.beginPath();
-                ctx.arc(x - b.radius*0.3, y - b.radius*0.3, b.radius*0.2, 0, Math.PI*2);
-                ctx.fillStyle = 'rgba(255,255,255,0.4)';
-                ctx.fill();
 
                 // Value Text
                 ctx.shadowBlur = 0;
                 ctx.fillStyle = 'white';
-                ctx.font = '900 40px Outfit';
+                ctx.font = '900 45px Outfit';
                 ctx.textAlign = 'center';
                 ctx.textBaseline = 'middle';
                 ctx.fillText(b.val, x, y);
                 ctx.restore();
 
-                // Collision with Hand
+                // Collision
                 const d = Math.hypot(handPos.x - x, handPos.y - y);
-                if(d < b.radius + 20) popBubble(b);
+                if(d < b.radius + 30) popBubble(b);
 
-                // Auto respawn if out of bounds
-                if(y < -100) {
-                    Matter.Body.setPosition(b.body, { x, y: window.innerHeight + 100 });
+                // Recycle if gone
+                if(y < -b.radius*2) {
+                    Matter.Body.setPosition(b.body, { x: (Math.random()*0.8+0.1)*window.innerWidth, y: window.innerHeight+100 });
                 }
             });
 
             // Particles
             particles.forEach((p, i) => {
-                p.x += p.vx;
-                p.y += p.vy;
-                p.life -= 0.02;
+                p.x += p.vx; p.y += p.vy; p.life -= 0.015;
                 if(p.life <= 0) particles.splice(i, 1);
-                
                 ctx.globalAlpha = p.life;
                 ctx.beginPath();
                 ctx.arc(p.x, p.y, p.size, 0, Math.PI*2);
@@ -438,14 +438,19 @@
             });
             ctx.globalAlpha = 1;
 
-            // Hand Pointer
+            // Hand Tracker Visual (Cyber Ring)
             ctx.beginPath();
-            ctx.arc(handPos.x, handPos.y, 15, 0, Math.PI*2);
+            ctx.arc(handPos.x, handPos.y, 25, 0, Math.PI*2);
+            ctx.strokeStyle = '#00f2ff';
+            ctx.lineWidth = 4;
+            ctx.setLineDash([10, 5]);
+            ctx.stroke();
+            ctx.setLineDash([]);
+            
+            ctx.beginPath();
+            ctx.arc(handPos.x, handPos.y, 10, 0, Math.PI*2);
             ctx.fillStyle = 'white';
             ctx.fill();
-            ctx.strokeStyle = varColor('--primary');
-            ctx.lineWidth = 3;
-            ctx.stroke();
 
             requestAnimationFrame(gameLoop);
         }
@@ -457,14 +462,14 @@
             createExplosion(b.body.position.x, b.body.position.y, b.color);
             
             if(b.val === curProblem.ans) {
-                score += 100;
+                score += 150;
                 document.getElementById('score').innerText = score.toString().padStart(4, '0');
-                showFeedback("ELITE!", "#10b981");
+                showFeedback("LEVEL UP!", "#00f2ff");
                 setTimeout(newProblem, 400);
             } else {
-                score = Math.max(0, score - 50);
+                score = Math.max(0, score - 75);
                 document.getElementById('score').innerText = score.toString().padStart(4, '0');
-                showFeedback("CRASH!", "#ef4444");
+                showFeedback("RETRY!", "#ef4444");
                 setTimeout(newProblem, 400);
             }
         }
@@ -473,8 +478,8 @@
             const el = document.getElementById('feedback');
             el.innerText = txt;
             el.style.color = col;
-            gsap.fromTo(el, { scale: 0, opacity: 0 }, { scale: 1, opacity: 1, duration: 0.3, ease: "back.out(1.7)", onComplete: () => {
-                gsap.to(el, { scale: 1.5, opacity: 0, duration: 0.3, delay: 0.2 });
+            gsap.fromTo(el, { scale: 0, opacity: 0 }, { scale: 1.2, opacity: 1, duration: 0.4, ease: "elastic.out(1, 0.3)", onComplete: () => {
+                gsap.to(el, { scale: 2, opacity: 0, duration: 0.4, delay: 0.2 });
             }});
         }
 
@@ -485,29 +490,24 @@
                 document.getElementById('timer').innerText = timeLeft;
                 if(timeLeft <= 0) {
                     gameActive = false;
-                    alert(`PHASE COMPLETE!\nCapture Score: ${score}`);
+                    alert(`PHASE SUMMARY\nTotal Synapse Score: ${score}`);
                     location.reload();
                 }
             }, 1000);
         }
 
-        function varColor(name) {
-            return getComputedStyle(document.documentElement).getPropertyValue(name).trim();
-        }
-
-        // --- ML HAND TRACKING ---
+        // --- Hand Tracking High Accuracy ---
         const videoElement = document.querySelector('.input_video');
         const hands = new Hands({ locateFile: (file) => `https://cdn.jsdelivr.net/npm/@mediapipe/hands/${file}` });
         
         hands.setOptions({
             maxNumHands: 2,
             modelComplexity: 1,
-            minDetectionConfidence: 0.6,
-            minTrackingConfidence: 0.6
+            minDetectionConfidence: 0.7,
+            minTrackingConfidence: 0.7
         });
 
         hands.onResults(results => {
-            // Hide loader on first frame
             if(document.getElementById('loader').style.display !== 'none') {
                 document.getElementById('loader').style.display = 'none';
                 document.getElementById('menuOverlay').classList.remove('hidden');
@@ -515,13 +515,9 @@
 
             if (results.multiHandLandmarks && results.multiHandedness) {
                 for (let i = 0; i < results.multiHandLandmarks.length; i++) {
-                    const label = results.multiHandedness[i].label; // Left or Right
-                    
-                    // Note: MediaPipe labels are mirrored by default. 
-                    // If label 'Left' is detected, it corresponds to the user's actual right hand (and vice-versa).
-                    // We match based on selected side.
+                    const label = results.multiHandedness[i].label;
                     if (label === selectedHandSide) {
-                        const tip = results.multiHandLandmarks[i][8]; // Index finger tip
+                        const tip = results.multiHandLandmarks[i][8];
                         handPos.x = (1 - tip.x) * canvasOut.width;
                         handPos.y = tip.y * canvasOut.height;
                     }
@@ -534,6 +530,7 @@
             width: 1280, height: 720
         });
         mpCamera.start();
+
     </script>
 </body>
 </html>

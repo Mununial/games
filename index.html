@@ -3195,19 +3195,35 @@
                     body: JSON.stringify(payload)
                 });
 
-                const data = await response.json();
-
+                // Robust response checking
+                const contentType = response.headers.get("content-type");
                 if (!response.ok) {
-                    throw new Error(data.message || 'Authentication failed');
+                    let errorMessage = 'Authentication failed';
+                    try {
+                        const errorData = await response.json();
+                        errorMessage = errorData.message || errorMessage;
+                    } catch(e) {
+                        const errorText = await response.text();
+                        errorMessage = errorText || `Server Error: ${response.status}`;
+                    }
+                    throw new Error(errorMessage);
                 }
 
+                if (!contentType || !contentType.includes("application/json")) {
+                    throw new Error("Server Offline/Maintenance. Switching to Local Mode...");
+                }
+
+                const data = await response.json();
                 const { uniqueId, points = 0, name: uName, token } = data;
                 finalizeLogin(uniqueId, uName, points, token);
                 
             } catch (error) {
-                console.warn("Server connection failed, attempting Local Fallback...", error);
+                console.warn("Auth Error:", error.message);
                 
-                if (error.message === 'Failed to fetch' || error.message.includes('Server Offline')) {
+                // Trigger Local Fallback for Network errors or Server Syntax errors (like empty JSON)
+                const isNetworkError = error.message === 'Failed to fetch' || error.message.includes('JSON') || error.message.includes('Server Offline');
+                
+                if (isNetworkError) {
                     // LOCAL FALLBACK MODE
                     const localUsers = JSON.parse(localStorage.getItem('qrio_local_users') || '{}');
                     

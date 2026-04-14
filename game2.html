@@ -168,6 +168,7 @@
             .hud-card { gap: 15px; padding: 8px 15px; }
             .stat-val { font-size: 1.2rem; }
         }
+        @keyframes spin { to { transform: rotate(360deg); } }
     </style>
 </head>
 <body>
@@ -526,8 +527,6 @@
             width: 1280, height: 720
         });
         mpCamera.start();
-
-        @keyframes spin { to { transform: rotate(360deg); } }
     </script>
 </body>
 </html>

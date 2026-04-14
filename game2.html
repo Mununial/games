@@ -335,12 +335,15 @@
                 const x = (window.innerWidth / 5) * (i + 1) + (Math.random()-0.5)*150;
                 const y = window.innerHeight + 200 + (i * 120);
                 
-                const body = Bodies.circle(x, y, r, { frictionAir: 0.01, restitution: 0.95 });
+                const neonColors = ['#00f2ff', '#ec4899', '#8b5cf6', '#facc15', '#10b981', '#f97316'];
+                const bColor = neonColors[Math.floor(Math.random() * neonColors.length)];
+
+                const body = Bodies.circle(x, y, r, { frictionAir: 0.005, restitution: 1.0 });
                 bubbles.push({
                     body, val, radius: r,
-                    color: val === correct ? '#00f2ff' : '#ec4899',
+                    color: bColor,
                     swayOffset: Math.random() * Math.PI * 2,
-                    speed: 2.2 + Math.random() * 1.5, // MEDIUM SPEED
+                    speed: 3.2 + Math.random() * 2.2, // CHALLENGER SPEED
                     popped: false
                 });
                 World.add(engine.world, body);

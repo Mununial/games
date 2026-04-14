@@ -1840,14 +1840,8 @@
                             <span class="btn-text">Log In</span>
                         </button>
 
-                        <div style="margin: 20px 0; display:flex; align-items:center; color:#94a3b8; font-size:0.9rem;">
-                            <hr style="flex:1; border:none; border-top:1px solid #cbd5e1; margin-right:10px;"> OR
-                            <hr style="flex:1; border:none; border-top:1px solid #cbd5e1; margin-left:10px;">
-                        </div>
-                        <button type="button" class="btn-google" onclick="handleGoogleAuth()">
-                            <img src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg" width="18">
-                            Continue with Google
-                        </button>
+                        <p class="auth-toggle" style="margin-top:20px;" onclick="toggleAuth()">New to Qrio? <span>Sign
+                                Up</span></p>
 
                         <p class="auth-toggle" style="margin-top:20px;" onclick="toggleAuth()">New to Qrio? <span>Sign
                                 Up</span></p>
@@ -3140,57 +3134,6 @@
             });
         });
 
-        async function handleGoogleAuth() {
-            showGameNotify('Handshaking with Google...', 'success');
-            
-            // Register/Login Google User in backend to prevent 404s
-            const googleUser = {
-                userId: 'google_explorer',
-                name: 'Google Explorer',
-                password: 'google_secure_token_123'
-            };
-
-            try {
-                // Try to signup (if exists, it will return 409, which we catch or handle)
-                const signupRes = await fetch('/api/signup', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify(googleUser)
-                });
-                
-                // Even if it fails (already exists), we just proceed to login state
-                const response = await fetch('/api/signin', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ userId: googleUser.userId, password: googleUser.password })
-                });
-
-                if (response.ok) {
-                    const data = await response.json();
-                    localStorage.setItem('qrio_active_id', data.uniqueId);
-                    
-                    // Safe element updates
-                    const updateText = (id, text) => {
-                        const el = document.getElementById(id);
-                        if (el) el.innerText = text;
-                    };
-
-                    // Update Sidebar Content
-                    updateText('sideNavName', data.name);
-                    updateText('welcomeNameDisplay', data.name);
-                    updateText('sideWalletPoints', data.points + " pts");
-                    updateText('cardHolderName', data.name);
-                    updateText('cardIdDisplay', formatIdForCard(data.uniqueId));
-                    if(document.getElementById('sideNavAvatar')) document.getElementById('sideNavAvatar').src = `https://api.dicebear.com/7.x/pixel-art/svg?seed=${data.name}`;
-
-                    showGameNotify('Google Mission Link Secure. Welcome back Agent.', 'success');
-                    navigateTo('dashboardView');
-                }
-            } catch (err) {
-                console.error("Google Auth Error:", err);
-                showGameNotify('Google Auth failed. Offline?', 'error');
-            }
-        }
 
         function formatIdForCard(id) {
             if (!id) return "•••• •••• •••• ••••";

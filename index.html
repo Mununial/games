@@ -1495,116 +1495,58 @@
             position: fixed;
             bottom: 30px;
             right: 30px;
-            width: 70px;
-            height: 70px;
-            background: linear-gradient(135deg, var(--primary), var(--secondary));
-            border-radius: 20px;
+            width: 80px;
+            height: 80px;
+            background: linear-gradient(135deg, #6366f1, #a855f7);
+            border-radius: 50% 50% 10% 50%;
             display: flex;
             align-items: center;
             justify-content: center;
             color: white;
-            font-size: 2.22rem;
+            font-size: 2.5rem;
             cursor: move;
             z-index: 10000;
-            box-shadow: 0 10px 40px rgba(99, 102, 241, 0.4);
-            transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            box-shadow: 0 10px 30px rgba(99, 102, 241, 0.5);
+            transition: transform 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
             animation: robot-hover 3s infinite ease-in-out;
             touch-action: none;
-            border: 2px solid rgba(255,255,255,0.2);
         }
 
-        #mastyBot::after {
-            content: '';
-            position: absolute;
-            inset: -5px;
-            border-radius: 25px;
-            border: 2px solid var(--primary);
-            animation: scanner 2s linear infinite;
-            opacity: 0.5;
-        }
-
-        @keyframes scanner {
-            0% { transform: scale(1); opacity: 0.5; }
-            100% { transform: scale(1.2); opacity: 0; }
-        }
-
-        #mastyBot:hover { transform: scale(1.1) rotate(5deg); box-shadow: 0 15px 50px rgba(99, 102, 241, 0.6); }
+        #mastyBot:hover { transform: scale(1.1); }
+        #mastyBot:active { transform: scale(0.9); }
 
         @keyframes robot-hover {
-            0%, 100% { transform: translateY(0); }
-            50% { transform: translateY(-12px); }
+            0%, 100% { transform: translateY(0) rotate(0); }
+            50% { transform: translateY(-10px) rotate(5deg); }
         }
 
         #chatWindow {
             position: fixed;
             bottom: 120px;
             right: 30px;
-            width: 380px;
-            height: 520px;
-            background: rgba(15, 23, 42, 0.95);
-            backdrop-filter: blur(25px);
-            border: 1px solid var(--primary-border);
-            border-radius: 30px;
+            width: 350px;
+            height: 480px;
+            background: var(--glass-bg);
+            backdrop-filter: blur(20px);
+            border: 1px solid var(--glass-border);
+            border-radius: 24px;
             z-index: 9999;
             display: none;
             flex-direction: column;
             overflow: hidden;
-            box-shadow: 0 25px 60px rgba(0,0,0,0.5);
-            animation: chat-pop 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            box-shadow: 0 20px 50px rgba(0,0,0,0.3);
+            animation: chat-pop 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
         }
 
+        @keyframes chat-pop { from { transform: scale(0.5) translateY(100px); opacity: 0; } to { transform: scale(1) translateY(0); opacity: 1; } }
+
         .chat-header {
-            padding: 24px;
-            background: linear-gradient(90deg, var(--primary), var(--secondary));
+            padding: 20px;
+            background: linear-gradient(90deg, #6366f1, #a855f7);
             color: white;
             display: flex;
             justify-content: space-between;
             align-items: center;
-            border-bottom: 2px solid rgba(255,255,255,0.1);
-        }
-
-        .chat-messages {
-            flex: 1;
-            padding: 20px;
-            overflow-y: auto;
-            display: flex;
-            flex-direction: column;
-            gap: 15px;
-            background: rgba(0,0,0,0.2);
-        }
-
-        .msg {
-            padding: 12px 18px;
-            border-radius: 20px;
-            max-width: 85%;
-            font-size: 0.95rem;
-            line-height: 1.5;
-            animation: msg-in 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
-            position: relative;
-        }
-
-        .msg.bot { 
-            background: rgba(255,255,255,0.05); 
-            color: #f8fafc; 
-            align-self: flex-start; 
-            border: 1px solid rgba(255,255,255,0.1);
-            border-bottom-left-radius: 5px; 
-        }
-
-        .msg.user { 
-            background: var(--primary); 
-            color: white; 
-            align-self: flex-end; 
-            border-bottom-right-radius: 5px; 
-            box-shadow: 0 5px 15px rgba(79, 70, 229, 0.3);
-        }
-
-        .thinking {
-            font-style: italic;
-            opacity: 0.6;
-            font-size: 0.8rem;
-            margin-bottom: 10px;
-            display: none;
         }
 
         .chat-messages {
@@ -1691,10 +1633,8 @@
             <i class="fa-solid fa-xmark" style="cursor:pointer;" onclick="toggleChat()"></i>
         </div>
         <div class="chat-messages" id="chatMsgs">
-            <div class="msg bot">Yo, Agent! I'm Qrio. Ready for some mission training or just here for the masty? 😜</div>
+            <div class="msg bot">Yo, Agent! I'm Qrio. Study karoge ya masty? 😜</div>
         </div>
-        <div id="thinkingIndicator" class="thinking" style="padding-left: 20px;">Masty Bot is thinking...</div>
-
         <div class="chat-input-area">
             <input type="text" id="chatInput" placeholder="Ask me anything..." onkeypress="if(event.key==='Enter') sendMsg()">
             <button onclick="sendMsg()"><i class="fa-solid fa-paper-plane"></i></button>
@@ -3733,24 +3673,16 @@
 
         function sendMsg() {
             const input = document.getElementById('chatInput');
-            const indicator = document.getElementById('thinkingIndicator');
             const text = input.value.trim();
             if(!text) return;
 
             addMsg(text, 'user');
             input.value = '';
 
-            // Show Thinking
-            indicator.style.display = 'block';
-
             setTimeout(() => {
                 const response = mastyResponses[Math.floor(Math.random() * mastyResponses.length)];
                 addMsg(response, 'bot');
-                indicator.style.display = 'none';
-                
-                // Extra visual pop
-                gsap.from(".msg.bot:last-child", { scale: 0.8, opacity: 0, duration: 0.4, ease: "back.out" });
-            }, 1200);
+            }, 800);
         }
 
         function addMsg(text, sender) {

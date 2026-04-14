@@ -1842,9 +1842,6 @@
 
                         <p class="auth-toggle" style="margin-top:20px;" onclick="toggleAuth()">New to Qrio? <span>Sign
                                 Up</span></p>
-
-                        <p class="auth-toggle" style="margin-top:20px;" onclick="toggleAuth()">New to Qrio? <span>Sign
-                                Up</span></p>
                     </form>
                 </div>
                 <!-- Sign Up -->
@@ -3178,12 +3175,17 @@
                 btnText.innerText = 'Creating...';
                 submitBtn.style.pointerEvents = 'none';
 
+                const controller = new AbortController();
+                const timeoutId = setTimeout(() => controller.abort(), 10000);
+
                 try {
                     const response = await fetch('/api/signup', {
                         method: 'POST',
                         headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify({ name, userId, password })
+                        body: JSON.stringify({ name, userId, password }),
+                        signal: controller.signal
                     });
+                    clearTimeout(timeoutId);
                     const data = await response.json();
 
                     if (!response.ok) {
@@ -3237,12 +3239,17 @@
                 btnText.innerText = 'Authenticating...';
                 submitBtn.style.pointerEvents = 'none';
 
+                const controller = new AbortController();
+                const timeoutId = setTimeout(() => controller.abort(), 10000);
+
                 try {
                     const response = await fetch('/api/signin', {
                         method: 'POST',
                         headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify({ userId: providedId, password })
+                        body: JSON.stringify({ userId: providedId, password }),
+                        signal: controller.signal
                     });
+                    clearTimeout(timeoutId);
 
                     const data = await response.json();
 

@@ -18,35 +18,8 @@ const io = new Server(server, {
 
 app.use(cors());
 app.use(express.json());
-app.use(express.static(path.join(__dirname)));
 
-const DATA_FILE = path.join(__dirname, 'users.json');
-const SESSIONS_FILE = path.join(__dirname, 'sessions.json');
-
-// Helper to read/write users
-function readData() {
-    if (!fs.existsSync(DATA_FILE)) return {};
-    return JSON.parse(fs.readFileSync(DATA_FILE));
-}
-function writeData(data) {
-    fs.writeFileSync(DATA_FILE, JSON.stringify(data, null, 2));
-}
-
-// Helper to read/write sessions
-function readSessions() {
-    if (!fs.existsSync(SESSIONS_FILE)) return {};
-    return JSON.parse(fs.readFileSync(SESSIONS_FILE));
-}
-function writeSessions(data) {
-    fs.writeFileSync(SESSIONS_FILE, JSON.stringify(data, null, 2));
-}
-
-// Generate a secure token
-function generateToken() {
-    return crypto.randomBytes(32).toString('hex');
-}
-
-// --- REST Endpoints ---
+// --- REST Endpoints (Moved up for priority) ---
 
 app.post('/api/signup', (req, res) => {
     const { userId, name, password } = req.body;
@@ -80,6 +53,9 @@ app.post('/api/signin', (req, res) => {
         res.status(401).json({ success: false, message: 'Invalid credentials.' });
     }
 });
+
+// Static files AFTER API routes
+app.use(express.static(path.join(__dirname)));
 
 // NEW: Verify session token (for cross-device login)
 app.get('/api/session/:token', (req, res) => {

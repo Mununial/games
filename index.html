@@ -3206,6 +3206,11 @@
                     if(document.getElementById('sideNavAvatar')) document.getElementById('sideNavAvatar').src = `https://api.dicebear.com/7.x/pixel-art/svg?seed=${uName}`;
 
                     showGameNotify(`Account created! Welcome, ${uName}! 🎮`, 'success');
+                    
+                    // Save Session & Redirect
+                    localStorage.setItem('qrio_active_id', uniqueId);
+                    await new Promise(r => setTimeout(r, 800));
+                    navigateTo('dashboardView');
                 } catch (error) {
                     showGameNotify('Error connecting to Server.', 'error');
                     resetBtnState();
@@ -3255,8 +3260,11 @@
                         if(document.getElementById('sideNavAvatar')) document.getElementById('sideNavAvatar').src = `https://api.dicebear.com/7.x/pixel-art/svg?seed=${uName}`;
 
                         showGameNotify(`Welcome back, ${uName}! 🎮`, 'success');
-                        // Minor delay for loading visual effect
+                        
+                        // Save Session & Redirect
+                        localStorage.setItem('qrio_active_id', uniqueId);
                         await new Promise(r => setTimeout(r, 800));
+                        navigateTo('dashboardView');
                     } else {
                         errElement.innerText = data.message;
                         errElement.style.display = "block";

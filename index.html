@@ -3024,11 +3024,17 @@
             }
         });
 
+        let isNavigating = false;
         function navigateTo(viewId) {
+            if (isNavigating) return;
+            
             const currentView = document.querySelector('.view.active');
             const nextView = document.getElementById(viewId);
             const mainNav = document.getElementById('mainNav');
             
+            if (!nextView || currentView === nextView) return;
+            isNavigating = true;
+
             // Hide/Show global nav
             if (viewId === 'landingView') {
                 mainNav.style.display = 'flex';
@@ -3037,10 +3043,8 @@
                 mainNav.style.opacity = '0';
                 setTimeout(() => mainNav.style.display = 'none', 300);
                 // Ensure landing is totally out
-                document.getElementById('landingView').style.display = 'none';
+                if (document.getElementById('landingView')) document.getElementById('landingView').style.display = 'none';
             }
-
-            if (currentView === nextView) return;
 
             gsap.to(currentView, {
                 opacity: 0,
@@ -3056,11 +3060,14 @@
                     
                     // Controlled Mobile Nav visibility
                     const globalMobileNav = document.getElementById('globalMobileNav');
-                    if (viewId === 'dashboardView') {
-                        globalMobileNav.style.display = 'flex';
-                    } else {
-                        globalMobileNav.style.display = 'none';
+                    if (globalMobileNav) {
+                        if (viewId === 'dashboardView') {
+                            globalMobileNav.style.display = 'flex';
+                        } else {
+                            globalMobileNav.style.display = 'none';
+                        }
                     }
+                    
                     nextView.style.transform = 'translateY(10px)';
                     nextView.classList.add('active');
                     
@@ -3070,6 +3077,7 @@
                         duration: 0.4,
                         ease: "power2.out",
                         onComplete: () => {
+                            isNavigating = false;
                             window.scrollTo({ top: 0, behavior: 'smooth' });
                         }
                     });
@@ -3147,187 +3155,135 @@
         async function handleAuth(e, type) {
             e.preventDefault();
 
-            let uniqueId;
-            let currentPoints = 0;
-            let submitBtn = document.getElementById(type === 'signin' ? 'btn-signin' : 'btn-signup');
-            let spinner = document.getElementById(type === 'signin' ? 'spin-signin' : 'spin-signup');
-            let btnText = submitBtn.querySelector('.btn-text');
-
-            if (type === 'signup') {
-                const nameInput = document.getElementById('signup-name');
-                const userIdInput = document.getElementById('signup-id');
-                const passInput = document.getElementById('signup-pwd');
-                const errElement = document.getElementById('signup-err');
-
-                if (!validateFields([nameInput, userIdInput, passInput])) {
-                    errElement.innerText = "Please fill in all fields.";
-                    errElement.style.display = "block";
-                    return;
-                }
-                errElement.style.display = "none";
-
-                const name = nameInput.value;
-                const userId = userIdInput.value.trim();
-                const password = passInput.value;
-
-                // Loading State
-                spinner.style.display = 'inline-block';
-                btnText.innerText = 'Creating...';
-                submitBtn.style.pointerEvents = 'none';
-
-                const controller = new AbortController();
-                const timeoutId = setTimeout(() => controller.abort(), 10000);
-
-                try {
-                    const response = await fetch('/api/signup', {
-                        method: 'POST',
-                        headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify({ name, userId, password }),
-                        signal: controller.signal
-                    });
-                    clearTimeout(timeoutId);
-                    const data = await response.json();
-
-                    if (!response.ok) {
-                        errElement.innerText = `Sign Up Failed: ${data.message}`;
-                        errElement.style.display = "block";
-                        resetBtnState();
-                        return;
-                    }
-
-                    uniqueId = data.uniqueId;
-                    currentPoints = data.points;
-                    let uName = data.name || name || uniqueId;
-                    if (data.token) window._loginToken = data.token;
-                    
-                    // Populate New Mission Control Elements
-                    if(document.getElementById('welcomeNameDisplay')) document.getElementById('welcomeNameDisplay').innerText = uName;
-                    if(document.getElementById('sideNavName')) document.getElementById('sideNavName').innerText = uName;
-                    if(document.getElementById('cardHolderName')) document.getElementById('cardHolderName').innerText = uName;
-                    if(document.getElementById('cardIdDisplay')) document.getElementById('cardIdDisplay').innerText = formatIdForCard(uniqueId);
-                    if(document.getElementById('sideNavAvatar')) document.getElementById('sideNavAvatar').src = `https://api.dicebear.com/7.x/pixel-art/svg?seed=${uName}`;
-
-                    showGameNotify(`Account created! Welcome, ${uName}! 🎮`, 'success');
-                    
-                    // Save Session & Redirect
-                    localStorage.setItem('qrio_active_id', uniqueId);
-                    await new Promise(r => setTimeout(r, 800));
-                    navigateTo('dashboardView');
-                } catch (error) {
-                    showGameNotify('Error connecting to Server.', 'error');
-                    resetBtnState();
-                    return;
-                }
-            } else {
-                // Sign In mode
-                const userIdInput = document.getElementById('signin-id');
-                const passInput = document.getElementById('signin-pwd');
-                const errElement = document.getElementById('signin-err');
-
-                if (!validateFields([userIdInput, passInput])) {
-                    errElement.innerText = "Please fill in all fields.";
-                    errElement.style.display = "block";
-                    return;
-                }
-                errElement.style.display = "none";
-
-                const providedId = userIdInput.value.trim();
-                const password = passInput.value;
-
-                // Loading State
-                spinner.style.display = 'inline-block';
-                btnText.innerText = 'Authenticating...';
-                submitBtn.style.pointerEvents = 'none';
-
-                const controller = new AbortController();
-                const timeoutId = setTimeout(() => controller.abort(), 10000);
-
-                try {
-                    const response = await fetch('/api/signin', {
-                        method: 'POST',
-                        headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify({ userId: providedId, password }),
-                        signal: controller.signal
-                    });
-                    clearTimeout(timeoutId);
-
-                    const data = await response.json();
-
-                    if (response.ok) {
-                        uniqueId = data.uniqueId;
-                        currentPoints = data.points;
-                        let uName = data.name || uniqueId;
-                        if (data.token) window._loginToken = data.token;
-                        
-                        // Populate New Mission Control Elements
-                        if(document.getElementById('welcomeNameDisplay')) document.getElementById('welcomeNameDisplay').innerText = uName;
-                        if(document.getElementById('sideNavName')) document.getElementById('sideNavName').innerText = uName;
-                        if(document.getElementById('cardHolderName')) document.getElementById('cardHolderName').innerText = uName;
-                        if(document.getElementById('cardIdDisplay')) document.getElementById('cardIdDisplay').innerText = formatIdForCard(uniqueId);
-                        if(document.getElementById('sideNavAvatar')) document.getElementById('sideNavAvatar').src = `https://api.dicebear.com/7.x/pixel-art/svg?seed=${uName}`;
-
-                        showGameNotify(`Welcome back, ${uName}! 🎮`, 'success');
-                        
-                        // Save Session & Redirect
-                        localStorage.setItem('qrio_active_id', uniqueId);
-                        await new Promise(r => setTimeout(r, 800));
-                        navigateTo('dashboardView');
-                    } else {
-                        errElement.innerText = data.message;
-                        errElement.style.display = "block";
-                        showGameNotify(data.message, 'error');
-                        resetBtnState();
-                        return;
-                    }
-                } catch (error) {
-                    showGameNotify('Error connecting to Server.', 'error');
-                    resetBtnState();
-                    return;
-                }
-            }
+            const isSignin = type === 'signin';
+            const submitBtn = document.getElementById(isSignin ? 'btn-signin' : 'btn-signup');
+            const spinner = document.getElementById(isSignin ? 'spin-signin' : 'spin-signup');
+            const btnText = submitBtn.querySelector('.btn-text');
+            const errElement = document.getElementById(isSignin ? 'signin-err' : 'signup-err');
 
             function resetBtnState() {
                 spinner.style.display = 'none';
-                btnText.innerText = type === 'signin' ? 'Log In' : 'Join Qrio';
+                btnText.innerText = isSignin ? 'Log In' : 'Join Qrio';
                 submitBtn.style.pointerEvents = 'all';
             }
 
-            // Sync State
-            resetBtnState();
+            // Get inputs
+            const inputs = isSignin ? 
+                [document.getElementById('signin-id'), document.getElementById('signin-pwd')] :
+                [document.getElementById('signup-name'), document.getElementById('signup-id'), document.getElementById('signup-pwd')];
 
-            // Store local session
-            localStorage.setItem('qrio_active_id', uniqueId);
+            if (!validateFields(inputs)) {
+                errElement.innerText = "Please fill in all fields.";
+                errElement.style.display = "block";
+                return;
+            }
+            errElement.style.display = "none";
 
-            // If server returned a token, save it and show shareable link
-            if (window._loginToken) {
-                localStorage.setItem('qrio_session_token', window._loginToken);
-                // Show shareable link notification
-                const shareUrl = `${window.location.origin}${window.location.pathname}?token=${window._loginToken}`;
-                window._shareUrl = shareUrl;
-                setTimeout(() => showShareLinkToast(shareUrl), 1500);
-                window._loginToken = null;
+            // Loading State
+            spinner.style.display = 'inline-block';
+            btnText.innerText = isSignin ? 'Authenticating...' : 'Creating...';
+            submitBtn.style.pointerEvents = 'none';
+
+            const payload = isSignin ? 
+                { userId: inputs[0].value.trim(), password: inputs[1].value } :
+                { name: inputs[0].value, userId: inputs[1].value.trim(), password: inputs[2].value };
+
+            try {
+                const response = await fetch(`/api/${type}`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(payload)
+                });
+
+                const data = await response.json();
+
+                if (!response.ok) {
+                    throw new Error(data.message || 'Authentication failed');
+                }
+
+                const { uniqueId, points = 0, name: uName, token } = data;
+                finalizeLogin(uniqueId, uName, points, token);
+                
+            } catch (error) {
+                console.warn("Server connection failed, attempting Local Fallback...", error);
+                
+                if (error.message === 'Failed to fetch' || error.message.includes('Server Offline')) {
+                    // LOCAL FALLBACK MODE
+                    const localUsers = JSON.parse(localStorage.getItem('qrio_local_users') || '{}');
+                    
+                    if (isSignin) {
+                        const user = localUsers[payload.userId];
+                        if (user && user.password === payload.password) {
+                            showGameNotify(`Local Login Successful (Offline Mode) 📡`, 'success');
+                            finalizeLogin(payload.userId, user.name, user.points || 0);
+                        } else {
+                            errElement.innerText = user ? "Invalid local password." : "User not found locally and Server is offline.";
+                            errElement.style.display = "block";
+                            resetBtnState();
+                        }
+                    } else {
+                        // Cleanup signup payload for local storage
+                        localUsers[payload.userId] = { name: payload.name, password: payload.password, points: 0 };
+                        localStorage.setItem('qrio_local_users', JSON.stringify(localUsers));
+                        showGameNotify(`Account created locally (Offline Mode) 📡`, 'success');
+                        finalizeLogin(payload.userId, payload.name, 0);
+                    }
+                } else {
+                    errElement.innerText = error.message;
+                    errElement.style.display = "block";
+                    showGameNotify(error.message, 'error');
+                    resetBtnState();
+                }
             }
 
-            if(document.getElementById('sideWalletPoints')) document.getElementById('sideWalletPoints').innerText = currentPoints + " pts";
-            if(document.getElementById('totalPointsBoard')) document.getElementById('totalPointsBoard').innerText = "Total: " + currentPoints + " pts";
-            if(document.getElementById('userScoreDisplay')) document.getElementById('userScoreDisplay').innerText = "Points: " + currentPoints;
+            function finalizeLogin(uniqueId, uName, points, token = null) {
+                // Populate UI
+                const updateUI = (id, text) => { if(document.getElementById(id)) document.getElementById(id).innerText = text; };
+                const displayName = uName || uniqueId;
+                
+                updateUI('welcomeNameDisplay', displayName);
+                updateUI('sideNavName', displayName);
+                updateUI('cardHolderName', displayName);
+                updateUI('sideWalletPoints', points + " pts");
+                updateUI('totalPointsBoard', "Total: " + points + " pts");
+                updateUI('userScoreDisplay', "Points: " + points);
+                
+                if(document.getElementById('cardIdDisplay')) document.getElementById('cardIdDisplay').innerText = formatIdForCard(uniqueId);
+                if(document.getElementById('sideNavAvatar')) document.getElementById('sideNavAvatar').src = `https://api.dicebear.com/7.x/pixel-art/svg?seed=${displayName}`;
 
-            // Reset forms
-            document.getElementById('signInForm').reset();
-            document.getElementById('signUpForm').reset();
+                if (!token) {
+                    showGameNotify(`Welcome, ${displayName}! (Running in Local Mode)`, 'success');
+                } else {
+                    showGameNotify(isSignin ? `Welcome back, ${displayName}! 🎮` : `Account created! Welcome, ${displayName}! 🎮`, 'success');
+                }
+                
+                // Sessions
+                localStorage.setItem('qrio_active_id', uniqueId);
+                if (token) {
+                    localStorage.setItem('qrio_session_token', token);
+                    const shareUrl = `${window.location.origin}${window.location.pathname}?token=${token}`;
+                    setTimeout(() => showShareLinkToast(shareUrl), 1500);
+                }
 
-            // Go to Dashboard
-            navigateTo('dashboardView');
-            
-            // Initializing Welcome Animation
-            setTimeout(() => {
-                 const nameEl = document.getElementById('navUsername');
-                 if(nameEl) {
-                     nameEl.classList.add('pulse-name');
-                     setTimeout(() => nameEl.classList.remove('pulse-name'), 3000);
-                 }
-            }, 1000);
+                // Clean up forms
+                document.getElementById('signInForm').reset();
+                document.getElementById('signUpForm').reset();
 
+                // Finalize welcome animation
+                setTimeout(() => {
+                    const nameEl = document.getElementById('navUsername');
+                    if(nameEl) {
+                        nameEl.classList.add('pulse-name');
+                        setTimeout(() => nameEl.classList.remove('pulse-name'), 3000);
+                    }
+                }, 1000);
+
+                // Success! Redirect
+                setTimeout(() => {
+                    resetBtnState();
+                    navigateTo('dashboardView');
+                }, 600);
+            }
         }
 
         async function redeemPoints(points) {

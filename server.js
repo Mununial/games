@@ -19,6 +19,36 @@ const io = new Server(server, {
 app.use(cors());
 app.use(express.json());
 
+// --- Helper Functions ---
+const USERS_FILE = path.join(__dirname, 'users.json');
+const SESSIONS_FILE = path.join(__dirname, 'sessions.json');
+
+function readData() {
+    try {
+        if (!fs.existsSync(USERS_FILE)) fs.writeFileSync(USERS_FILE, '{}');
+        return JSON.parse(fs.readFileSync(USERS_FILE, 'utf8'));
+    } catch (e) { return {}; }
+}
+
+function writeData(data) {
+    fs.writeFileSync(USERS_FILE, JSON.stringify(data, null, 2));
+}
+
+function readSessions() {
+    try {
+        if (!fs.existsSync(SESSIONS_FILE)) fs.writeFileSync(SESSIONS_FILE, '{}');
+        return JSON.parse(fs.readFileSync(SESSIONS_FILE, 'utf8'));
+    } catch (e) { return {}; }
+}
+
+function writeSessions(data) {
+    fs.writeFileSync(SESSIONS_FILE, JSON.stringify(data, null, 2));
+}
+
+function generateToken() {
+    return crypto.randomBytes(16).toString('hex');
+}
+
 // --- REST Endpoints (Moved up for priority) ---
 
 app.post('/api/signup', (req, res) => {

@@ -235,6 +235,9 @@
     <div id="feedback">BOOM!</div>
 
     <script>
+        // --- Global Variables (Declared first to avoid TDZ errors) ---
+        let renderer, scene, camera, meshGroup;
+        
         // --- Variables ---
         let selectedHandSide = 'Left';
         let score = 0;
@@ -263,7 +266,6 @@
         resize();
 
         // --- Three.js Background ---
-        let renderer, scene, camera, meshGroup;
         function init3DBG() {
             scene = new THREE.Scene();
             camera = new THREE.PerspectiveCamera(75, window.innerWidth/window.innerHeight, 1, 2000);
